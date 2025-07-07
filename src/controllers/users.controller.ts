@@ -79,7 +79,12 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
       }
     );
 
-    res.status(HttpStatusCodes.OK).json({ token });
+    // Return user info (excluding password) along with token
+    const { id, name, email: userEmail, role } = user;
+    res.status(HttpStatusCodes.OK).json({
+      token,
+      user: { id, name, email: userEmail, role },
+    });
   } catch (error) {
     next(error);
   }
