@@ -5,10 +5,21 @@ import HttpStatusCodes from "../common/httpstatuscode";
 import crypto from "crypto";
 import jwt, { SignOptions } from "jsonwebtoken";
 import bcryptjs from "bcryptjs";
-
+import { sendEmail } from "../utils/mailer";
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, email, password,role } = req.body;
+    const { name, email, password, role,type } = req.body;
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      throw new RouteError(
+        HttpStatusCodes.CONFLICT,
+        "User with this email already exists."
+      );
+    }
 
     if (!name || !email || !password) {
       throw new ValidationErr("Name, email, and password are required.");
@@ -21,6 +32,16 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
         email,
         role,
         password: hashedPassword,
+      },
+    });
+    await sendEmail({
+      to: user.email,
+      type: type,
+      subject: "Welcome to Our Platform",
+      additionalData: {
+        email: user.email,
+        password: password,
+        role: user.role,
       },
     });
 
@@ -42,25 +63,29 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     });
 
     if (!user || !user.password) {
-      throw new RouteError( HttpStatusCodes.NOT_FOUND,"User not found.");
+      throw new RouteError(HttpStatusCodes.NOT_FOUND, "User not found.");
     }
 
     const isPasswordValid = await bcryptjs.compare(password, user.password);
     if (!isPasswordValid) {
-      throw new RouteError(HttpStatusCodes.UNAUTHORIZED,"Invalid password.");
+      throw new RouteError(HttpStatusCodes.UNAUTHORIZED, "Invalid password.");
     }
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || "secret", {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET || "secret",
+      {
+        expiresIn: "1h",
+      }
+    );
 
     res.status(HttpStatusCodes.OK).json({ token });
   } catch (error) {
     next(error);
   }
-}
+};
 
 export default {
   createUser,
-  login
+  login,
 };
