@@ -18,7 +18,7 @@ app.use(requestLogger);
 
 
 // Routes
-import usersRoutes from './routes/users.routes.js';
+import usersRoutes from './routes/users.routes';
 app.use('/api/users', usersRoutes);
 
 
