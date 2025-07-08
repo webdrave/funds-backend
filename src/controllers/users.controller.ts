@@ -8,7 +8,7 @@ import bcryptjs from "bcryptjs";
 import { sendEmail } from "../utils/mailer";
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, email, password, role,type } = req.body;
+    const { name, email, password, role, type } = req.body;
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -89,8 +89,41 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+const application = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { name, email, phone, message } = req.body;
+    if (!name || !email || !phone || !message) {
+      throw new ValidationErr("Name, email, phone, and message are required.");
+    }
+    const application = await prisma.application.create({
+      data: {
+        name,
+        email,
+        phone,
+        message,
+      },
+    });
+    res.status(HttpStatusCodes.CREATED).json({ application });
+  } catch (error) {
+    next(error);
+  }
+};
+const getApplication = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const applications = await prisma.application.findMany();
+    res.status(HttpStatusCodes.OK).json(applications);
+  } catch (error) {
+    next(error);
+  }
+};
 
 export default {
   createUser,
   login,
+  application,
+  getApplication,
 };
