@@ -12,8 +12,6 @@ interface EmailOptions {
   additionalData?: Record<string, any>;
 }
 
-console.log(process.env.EMAIL_USERNAME, process.env.EMAIL_PASSWORD);
-
 // Create transport with environment variables
 const transporter = nodemailer.createTransport({
   service: "gmail",
