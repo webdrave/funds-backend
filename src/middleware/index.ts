@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as validation from './validation';
+import jwt from 'jsonwebtoken';
+import { prisma } from '../utils/prismaclient';
 
 // Middleware for logging requests
 export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
@@ -52,11 +54,43 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
   });
 };
 
+// Authentication middleware
+export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'No token provided' });
+  }
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    // Fetch user from DB and attach to req.user
+    const user = await prisma.admin.findUnique({ where: { id: decoded.userId } });
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid token user' });
+    }
+    (req as any).user = user;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+};
+
+// Superadmin authorization middleware
+export const requireSuperadmin = (req: Request, res: Response, next: NextFunction) => {
+  const user = (req as any).user;
+  if (!user || user.role !== 'superadmin') {
+    return res.status(403).json({ error: 'Forbidden: Superadmin only' });
+  }
+  next();
+};
+
 // Export all middleware
 export { validation };
 
 export default {
   requestLogger,
   errorHandler,
+  authenticate,
+  requireSuperadmin,
   validation,
 };
