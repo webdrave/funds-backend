@@ -2,7 +2,7 @@ const nodemailer = require("nodemailer");
 import dotenv from "dotenv";
 dotenv.config();
 // Define email template types
-type EmailType = "userCreation" | "resetPassword" | "notification" | "welcome";
+type EmailType = "adminCreation" | "resetPassword" | "notification" | "welcome";
 
 // Email sending configuration
 interface EmailOptions {
@@ -27,7 +27,7 @@ const generateEmailContent = (
   additionalData?: Record<string, any>
 ): { subject: string; html: string } => {
   switch (type) {
-    case "userCreation":
+    case "adminCreation":
       return {
         subject: "Your Account Has Been Created",
         html: `
