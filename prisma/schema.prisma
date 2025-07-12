@@ -61,14 +61,12 @@ model Loan {
   id      String   @id @default(cuid())
   type    LoanType
   subtype String
-  amount  Int
-  name    String
-  email   String
-  phone   String
+  amount  Int       @default(0)
   review  String?
   status  LoanStatus  @default(PENDING)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  dsaProfile DSAProfile[]
 }
 
 enum LoanType {
@@ -159,6 +157,8 @@ model DSAProfile {
   PanNumber       String
   createdAt       DateTime         @default(now())
   documents       Document[]
+  loanid          String
+  loan            Loan            @relation(fields: [loanid], references: [id])
   dsa             User?             @relation(fields: [dsaId], references: [id])
   dsaId           String?
 }
