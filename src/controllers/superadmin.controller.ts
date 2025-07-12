@@ -2,12 +2,11 @@ import { Request, Response, NextFunction } from "express";
 import { prisma } from "../utils/prismaclient";
 import { RouteError, ValidationErr } from "../common/routeerror";
 import HttpStatusCodes from "../common/httpstatuscode";
-import crypto from "crypto";
-import jwt, { SignOptions } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import bcryptjs from "bcryptjs";
 import { sendEmail } from "../utils/mailer";
 
-const getAdmins = async (req: Request, res: Response, next: NextFunction) => {
+const getAdmins = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const admins = await prisma.admin.findMany();
     res.status(HttpStatusCodes.OK).json(admins);
@@ -15,7 +14,7 @@ const getAdmins = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
-const createAdmin = async (req: Request, res: Response, next: NextFunction) => {
+const createAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { name, email, password, role, type } = req.body;
     // Check if user already exists
@@ -59,7 +58,7 @@ const createAdmin = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
-const login = async (req: Request, res: Response, next: NextFunction) => {
+const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { email, password } = req.body;
 
@@ -98,7 +97,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
-const deleteAdmin = async (req: Request, res: Response, next: NextFunction) => {
+const deleteAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
 
@@ -125,10 +124,63 @@ const deleteAdmin = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+const application = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { name, email, phone, message } = req.body;
+    if (!name || !email || !phone || !message) {
+      throw new ValidationErr("Name, email, phone, and message are required.");
+    }
+    const application = await prisma.application.create({
+      data: {
+        name,
+        email,
+        phone,
+        message,
+      },
+    });
+    res.status(HttpStatusCodes.CREATED).json(application);
+  } catch (error) {
+    next(error);
+  }
+};
+const getApplication = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const applications = await prisma.application.findMany();
+    res.status(HttpStatusCodes.OK).json(applications);
+  } catch (error) {
+    next(error);
+  }
+};
+const updateApplicationStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
 
-export default {
+    if (!["approved", "rejected", "pending"].includes(status)) {
+      throw new ValidationErr("Invalid status value.");
+    }
+
+    const updated = await prisma.application.update({
+      where: { id },
+      data: { status },
+    });
+
+    res.status(HttpStatusCodes.OK).json(updated);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export {
   getAdmins,
   createAdmin,
   login,
   deleteAdmin,
+  application,
+  getApplication,
+  updateApplicationStatus
 };
