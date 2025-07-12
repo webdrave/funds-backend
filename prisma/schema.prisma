@@ -7,22 +7,165 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Admin {
-  id        String   @id @default(cuid())
-  role      String
-  email     String   @unique
+model User {
+  id        String          @id @default(cuid())
+  role      Role            @default(USER)
+  email     String          @unique
   name      String?
   password  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  purchases UserPurchase[]
+  notifications Notification[]
+  dsaProfile DSAProfile[]
 }
 
 model Application {
-  id        String   @id @default(uuid())
+  id        String   @id @default(cuid())
   name      String
   email     String
   phone     String
   message   String
   status    String   @default("pending")
   createdAt DateTime @default(now())
+}
+
+model Plan {
+  id        String         @id @default(cuid())
+  name      String
+  amount    Int
+  duration  Int
+  features  String[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  purchases UserPurchase[]
+}
+
+model UserPurchase {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  plan      Plan     @relation(fields: [planId], references: [id])
+  planId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  DSA
+  SUPERADMIN
+  USER
+}
+
+model Loan {
+  id      String   @id @default(cuid())
+  type    LoanType
+  subtype String
+  amount  Int
+  name    String
+  email   String
+  phone   String
+  review  String?
+  status  LoanStatus  @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum LoanType {
+  PRIVATE
+  GOVERNMENT
+  INSURANCE
+}
+
+enum LoanStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum PrivateLoanType {
+  PERSONAL
+  HOME
+  BUSINESS
+  CAR
+  PROPERTY
+}
+
+enum GovermentLoanType {
+  MUDRA
+  MSME
+  PMEGP
+  CGTMSE
+  STARTUPINDIA
+}
+
+enum InsuranceLoanType {
+  HEALTH
+  LIFE
+  CAR
+  HOME
+}
+
+model Notification {
+  id              String       @id @default(cuid())
+  type            NotificationType
+  title           String
+  message         String
+  isRead          Boolean   @default(false)
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  createdAt       DateTime  @default(now())
+}
+
+enum NotificationType {
+  DSA_UPDATE
+  TICKET
+  COMPLIANCE_ALERT
+  SYSTEM
+}
+
+model Document {
+  id              Int           @id @default(autoincrement())
+  type            DocumentType
+  documentUrl     String
+  isVerified      Boolean       @default(false)
+  isFlagged       Boolean       @default(false)
+  verificationNotes String?
+  createdAt       DateTime      @default(now())
+  dsaProfile      DSAProfile   @relation(fields: [dsaProfileId], references: [id])
+  dsaProfileId    String
+}
+
+model DSAProfileAddress {
+  id              String           @id @default(cuid())
+  address         String
+  city            String
+  state           String
+  pincode         String
+  dsaProfile      DSAProfile      @relation(fields: [dsaProfileId], references: [id])
+  dsaProfileId    String
+}
+
+model DSAProfile {
+  id              String           @id @default(cuid())
+  name            String
+  email           String
+  phone           String
+  address         DSAProfileAddress[]
+  gender          String
+  MaritalStatus   String
+  AadhaarNumber   String
+  PanNumber       String
+  createdAt       DateTime         @default(now())
+  documents       Document[]
+  dsa             User?             @relation(fields: [dsaId], references: [id])
+  dsaId           String?
+}
+
+enum DocumentType {
+  ID
+  PASSPORT
+  DRIVERS_LICENSE
+  NATIONAL_ID
 }
