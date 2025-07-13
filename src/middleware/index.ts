@@ -64,7 +64,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   try {
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
     // Fetch user from DB and attach to req.user
-    const user = await prisma.admin.findUnique({ where: { id: decoded.userId } });
+    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
     if (!user) {
       return res.status(401).json({ error: 'Invalid token user' });
     }
@@ -78,7 +78,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 // Superadmin authorization middleware
 export const requireSuperadmin = (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user;
-  if (!user || user.role !== 'superadmin') {
+  if (!user || user.role !== 'SUPERADMIN') {
     return res.status(403).json({ error: 'Forbidden: Superadmin only' });
   }
   next();
