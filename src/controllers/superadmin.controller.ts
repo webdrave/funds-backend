@@ -82,9 +82,6 @@ const login = async (req: Request, res: Response, next: NextFunction): Promise<v
     const token = jwt.sign(
       { userId: user.id },
       process.env.JWT_SECRET || "secret",
-      {
-        expiresIn: "1h",
-      }
     );
     // Return user info (excluding password) along with token
     const { id, name, email: userEmail, role } = user;
