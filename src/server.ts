@@ -4,6 +4,7 @@ import cors from 'cors';
 import { config } from './config';
 import { requestLogger, errorHandler } from './middleware';
 import superadminRoutes from './routes/superadmin.routes';
+import plansRoutes from './routes/plans.routes';
 
 // Load environment variables
 dotenv.config();
@@ -18,6 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
 
 app.use('/api/superadmin', superadminRoutes); // Assuming admin routes are similar to user routes
+app.use('/api/plans' , plansRoutes);
 
 // 404 handler for undefined routes
 app.use((req, res, next) => {
