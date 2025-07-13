@@ -8,7 +8,7 @@ import { sendEmail } from "../utils/mailer";
 
 const getAdmins = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const admins = await prisma.admin.findMany();
+    const admins = await prisma.user.findMany();
     res.status(HttpStatusCodes.OK).json(admins);
   } catch (error) {
     next(error);
@@ -18,7 +18,7 @@ const createAdmin = async (req: Request, res: Response, next: NextFunction): Pro
   try {
     const { name, email, password, role, type } = req.body;
     // Check if user already exists
-    const existingUser = await prisma.admin.findUnique({
+    const existingUser = await prisma.user.findUnique({
       where: { email },
     });
 
@@ -34,7 +34,7 @@ const createAdmin = async (req: Request, res: Response, next: NextFunction): Pro
     }
 
     const hashedPassword = await bcryptjs.hash(password, 10);
-    const user = await prisma.admin.create({
+    const user = await prisma.user.create({
       data: {
         name,
         email,
@@ -66,7 +66,7 @@ const login = async (req: Request, res: Response, next: NextFunction): Promise<v
       throw new ValidationErr("Email and password are required.");
     }
 
-    const user = await prisma.admin.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email },
     });
 
@@ -86,7 +86,6 @@ const login = async (req: Request, res: Response, next: NextFunction): Promise<v
         expiresIn: "1h",
       }
     );
-
     // Return user info (excluding password) along with token
     const { id, name, email: userEmail, role } = user;
     res.status(HttpStatusCodes.OK).json({
@@ -105,7 +104,7 @@ const deleteAdmin = async (req: Request, res: Response, next: NextFunction): Pro
       throw new ValidationErr("Admin ID is required.");
     }
 
-    const admin = await prisma.admin.findUnique({
+    const admin = await prisma.user.findUnique({
       where: { id },
     });
 
@@ -113,7 +112,7 @@ const deleteAdmin = async (req: Request, res: Response, next: NextFunction): Pro
       throw new RouteError(HttpStatusCodes.NOT_FOUND, "Admin not found.");
     }
 
-    await prisma.admin.delete({
+    await prisma.user.delete({
       where: { id },
     });
 
