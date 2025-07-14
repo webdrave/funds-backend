@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { prisma } from "../utils/prismaclient";
+import { Admin, Application } from "../models";
 import { RouteError, ValidationErr } from "../common/routeerror";
 import HttpStatusCodes from "../common/httpstatuscode";
 import jwt from "jsonwebtoken";
@@ -8,7 +8,7 @@ import { sendEmail } from "../utils/mailer";
 
 const getAdmins = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const admins = await prisma.user.findMany();
+    const admins = await Admin.find();
     res.status(HttpStatusCodes.OK).json(admins);
   } catch (error) {
     next(error);
@@ -18,9 +18,7 @@ const createAdmin = async (req: Request, res: Response, next: NextFunction): Pro
   try {
     const { name, email, password, role, type } = req.body;
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    const existingUser = await Admin.findOne({ email });
 
     if (existingUser) {
       throw new RouteError(
@@ -34,13 +32,11 @@ const createAdmin = async (req: Request, res: Response, next: NextFunction): Pro
     }
 
     const hashedPassword = await bcryptjs.hash(password, 10);
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        role,
-        password: hashedPassword,
-      },
+    const user = await Admin.create({
+      name,
+      email,
+      role,
+      password: hashedPassword,
     });
     await sendEmail({
       to: user.email,
@@ -66,9 +62,7 @@ const login = async (req: Request, res: Response, next: NextFunction): Promise<v
       throw new ValidationErr("Email and password are required.");
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
+    const user = await Admin.findOne({ email });
 
     if (!user || !user.password) {
       throw new RouteError(HttpStatusCodes.NOT_FOUND, "User not found.");
@@ -80,14 +74,18 @@ const login = async (req: Request, res: Response, next: NextFunction): Promise<v
     }
 
     const token = jwt.sign(
-      { userId: user.id },
+      { userId: user._id },
       process.env.JWT_SECRET || "secret",
+      {
+        expiresIn: "1h",
+      }
     );
+
     // Return user info (excluding password) along with token
-    const { id, name, email: userEmail, role } = user;
+    const { _id, name, email: userEmail, role } = user;
     res.status(HttpStatusCodes.OK).json({
       token,
-      user: { id, name, email: userEmail, role },
+      user: { id: _id, name, email: userEmail, role },
     });
   } catch (error) {
     next(error);
@@ -101,17 +99,13 @@ const deleteAdmin = async (req: Request, res: Response, next: NextFunction): Pro
       throw new ValidationErr("Admin ID is required.");
     }
 
-    const admin = await prisma.user.findUnique({
-      where: { id },
-    });
+    const admin = await Admin.findById(id);
 
     if (!admin) {
       throw new RouteError(HttpStatusCodes.NOT_FOUND, "Admin not found.");
     }
 
-    await prisma.user.delete({
-      where: { id },
-    });
+    await Admin.findByIdAndDelete(id);
 
     res
       .status(HttpStatusCodes.OK)
@@ -126,13 +120,11 @@ const application = async (req: Request, res: Response, next: NextFunction): Pro
     if (!name || !email || !phone || !message) {
       throw new ValidationErr("Name, email, phone, and message are required.");
     }
-    const application = await prisma.application.create({
-      data: {
-        name,
-        email,
-        phone,
-        message,
-      },
+    const application = await Application.create({
+      name,
+      email,
+      phone,
+      message,
     });
     res.status(HttpStatusCodes.CREATED).json(application);
   } catch (error) {
@@ -145,7 +137,7 @@ const getApplication = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const applications = await prisma.application.findMany();
+    const applications = await Application.find();
     res.status(HttpStatusCodes.OK).json(applications);
   } catch (error) {
     next(error);
@@ -160,10 +152,11 @@ const updateApplicationStatus = async (req: Request, res: Response, next: NextFu
       throw new ValidationErr("Invalid status value.");
     }
 
-    const updated = await prisma.application.update({
-      where: { id },
-      data: { status },
-    });
+    const updated = await Application.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
 
     res.status(HttpStatusCodes.OK).json(updated);
   } catch (error) {

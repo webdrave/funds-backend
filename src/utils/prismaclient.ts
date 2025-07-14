@@ -1,7 +1,15 @@
-import { PrismaClient } from "@prisma/client"
- 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
- 
-export const prisma = globalForPrisma.prisma || new PrismaClient()
- 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma
+import mongoose from 'mongoose';
+import dotenv from "dotenv";
+dotenv.config();
+
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/funds-backend';
+
+export const connectMongo = async () => {
+  try {
+    await mongoose.connect(MONGO_URI);
+    console.log('Connected to MongoDB');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    process.exit(1);
+  }
+};

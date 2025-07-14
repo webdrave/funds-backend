@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as validation from './validation';
 import jwt from 'jsonwebtoken';
-import { prisma } from '../utils/prismaclient';
+import { Admin } from '../models';
 
 // Middleware for logging requests
 export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
@@ -63,8 +63,8 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   const token = authHeader.split(' ')[1];
   try {
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-    // Fetch user from DB and attach to req.user
-    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+    // Fetch user from MongoDB and attach to req.user
+    const user = await Admin.findById(decoded.userId);
     if (!user) {
       return res.status(401).json({ error: 'Invalid token user' });
     }
