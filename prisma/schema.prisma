@@ -17,7 +17,6 @@ model User {
   updatedAt DateTime        @updatedAt
   purchases UserPurchase[]
   notifications Notification[]
-  dsaProfile DSAProfile[]
 }
 
 model Application {
@@ -67,7 +66,6 @@ model Loan {
   status  LoanStatus  @default(PENDING)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  dsaProfile DSAProfile[]
 }
 
 enum LoanType {
@@ -132,37 +130,8 @@ model Document {
   isFlagged       Boolean       @default(false)
   verificationNotes String?
   createdAt       DateTime      @default(now())
-  dsaProfile      DSAProfile   @relation(fields: [dsaProfileId], references: [id])
-  dsaProfileId    String
 }
 
-model DSAProfileAddress {
-  id              String           @id @default(cuid())
-  address         String
-  city            String
-  state           String
-  pincode         String
-  dsaProfile      DSAProfile      @relation(fields: [dsaProfileId], references: [id])
-  dsaProfileId    String
-}
-
-model DSAProfile {
-  id              String           @id @default(cuid())
-  name            String
-  email           String
-  phone           String
-  address         DSAProfileAddress[]
-  gender          String
-  MaritalStatus   String
-  AadhaarNumber   String
-  PanNumber       String
-  createdAt       DateTime         @default(now())
-  documents       Document[]
-  loanid          String
-  loan            Loan            @relation(fields: [loanid], references: [id])
-  dsa             User?             @relation(fields: [dsaId], references: [id])
-  dsaId           String?
-}
 
 enum DocumentType {
   ID
