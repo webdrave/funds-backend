@@ -55,3 +55,51 @@ const PlanSchema = new Schema<IPlan>({
 }, { timestamps: true });
 
 export const Plan = mongoose.models.Plan || mongoose.model<IPlan>('Plan', PlanSchema);
+
+export interface ILoanFormTemplateField {
+  label: string;
+  type: string;
+  required?: boolean;
+  options?: string[];
+}
+
+export interface ILoanFormTemplate extends Document {
+  name: string;
+  loanType?: string;
+  fields: ILoanFormTemplateField[];
+  createdBy: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const LoanFormTemplateSchema = new Schema<ILoanFormTemplate>({
+  name: { type: String, required: true },
+  loanType: { type: String },
+  fields: [
+    {
+      label: { type: String, required: true },
+      type: { type: String, required: true },
+      required: { type: Boolean, default: false },
+      options: { type: [String], default: undefined },
+    },
+  ],
+  createdBy: { type: String, required: true },
+}, { timestamps: true });
+
+export const LoanFormTemplate = mongoose.models.LoanFormTemplate || mongoose.model<ILoanFormTemplate>('LoanFormTemplate', LoanFormTemplateSchema);
+
+export interface ILoanFormSubmission extends Document {
+  templateId: string;
+  values: Record<string, any>;
+  submittedBy: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const LoanFormSubmissionSchema = new Schema<ILoanFormSubmission>({
+  templateId: { type: String, required: true },
+  values: { type: Object, required: true },
+  submittedBy: { type: String, required: true },
+}, { timestamps: true });
+
+export const LoanFormSubmission = mongoose.models.LoanFormSubmission || mongoose.model<ILoanFormSubmission>('LoanFormSubmission', LoanFormSubmissionSchema);
