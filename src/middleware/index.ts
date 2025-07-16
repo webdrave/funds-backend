@@ -83,6 +83,13 @@ export const requireSuperadmin = (req: Request, res: Response, next: NextFunctio
   }
   next();
 };
+export const requireDSA = (req: Request, res: Response, next: NextFunction) => {
+  const user = (req as any).user;
+  if (!user || user.role !== 'SUPERADMIN'&&user.role !=='DSA') {
+    return res.status(403).json({ error: 'Forbidden: Superadmin or DSA only' });
+  }
+  next();
+};
 
 // Export all middleware
 export { validation };
@@ -92,5 +99,6 @@ export default {
   errorHandler,
   authenticate,
   requireSuperadmin,
+  requireDSA,
   validation,
 };

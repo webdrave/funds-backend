@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticate, requireSuperadmin } from '../middleware';
+import { authenticate, requireDSA } from '../middleware';
 import expressAsyncHandler from 'express-async-handler';
 import {
   createTemplate,
@@ -12,10 +12,10 @@ import {
 const loanTemplateRoutes = Router();
 
 // All routes assume /api prefix is handled globally
-loanTemplateRoutes.get('/', authenticate, requireSuperadmin, expressAsyncHandler(getTemplates));
-loanTemplateRoutes.get('/:id', authenticate, requireSuperadmin, expressAsyncHandler(getTemplateById));
-loanTemplateRoutes.post('/', authenticate, requireSuperadmin, expressAsyncHandler(createTemplate));
-loanTemplateRoutes.put('/:id', authenticate, requireSuperadmin, expressAsyncHandler(updateTemplate));
-loanTemplateRoutes.delete('/:id', authenticate, requireSuperadmin, expressAsyncHandler(deleteTemplate));
+loanTemplateRoutes.get('/', authenticate,requireDSA, expressAsyncHandler(getTemplates));
+loanTemplateRoutes.get('/:id', authenticate,requireDSA, expressAsyncHandler(getTemplateById));
+loanTemplateRoutes.post('/', authenticate,requireDSA, expressAsyncHandler(createTemplate));
+loanTemplateRoutes.put('/:id', authenticate,requireDSA, expressAsyncHandler(updateTemplate));
+loanTemplateRoutes.delete('/:id', authenticate,requireDSA, expressAsyncHandler(deleteTemplate));
 
 export default loanTemplateRoutes; 
