@@ -103,3 +103,14 @@ const LoanFormSubmissionSchema = new Schema<ILoanFormSubmission>({
 }, { timestamps: true });
 
 export const LoanFormSubmission = mongoose.models.LoanFormSubmission || mongoose.model<ILoanFormSubmission>('LoanFormSubmission', LoanFormSubmissionSchema);
+
+const notificationSchema = new Schema({
+  userId: { type: String, required: true },
+  title: {type: String, required: true},
+  message: { type: String, required: true },
+  read: { type: Boolean, default: false },
+}, { timestamps: true });
+
+export const Notification = mongoose.models.Notification || mongoose.model('Notification', notificationSchema);
+
+
