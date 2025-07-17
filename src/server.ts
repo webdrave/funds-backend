@@ -7,6 +7,7 @@ import superadminRoutes from './routes/superadmin.routes';
 import plansRoutes from './routes/plans.routes';
 import loanTemplateRoutes from './routes/loanTemplate.routes';
 import loanFormRoutes from './routes/loanForm.routes';
+import notificationRoutes from './routes/notification.routes';
 
 // Load environment variables
 dotenv.config();
@@ -24,6 +25,7 @@ app.use('/api/superadmin', superadminRoutes); // Assuming admin routes are simil
 app.use('/api/plans' , plansRoutes);
 app.use('/api/loan-templates', loanTemplateRoutes);
 app.use('/api/loan-forms', loanFormRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // 404 handler for undefined routes
 app.use((req, res, next) => {
