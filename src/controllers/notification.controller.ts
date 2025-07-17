@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { Notification } from "../models";
-import { sendEmail } from "../utils/mailer";
+import { sendNotification } from "../utils/notifier";
 
 export const getNotifications = async (req: Request, res: Response) => {
 	const { userId } = req.query;
@@ -10,17 +10,8 @@ export const getNotifications = async (req: Request, res: Response) => {
 };
 
 export const createNotification = async (req: Request, res: Response) => {
-	const parsedData = req.body;
-	const notification = await Notification.create({ ...parsedData });
-	await sendEmail({
-		to: parsedData.userId,
-		type: "notification",
-		subject: parsedData.title,
-		additionalData: {
-			message: parsedData.message,
-		},
-	});
-
+	const { title, message, userId } = req.body;
+	const notification = await sendNotification({ title, message, userId });
 	res.status(201).json(notification);
 };
 
