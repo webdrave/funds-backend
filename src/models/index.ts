@@ -110,31 +110,50 @@ export const LoanFormTemplate =
 	mongoose.models.LoanFormTemplate ||
 	mongoose.model<ILoanFormTemplate>("LoanFormTemplate", LoanFormTemplateSchema);
 
-export interface ILoanFormSubmission extends Document {
+export interface ILoan extends Document {
 	templateId: string;
 	values: Record<string, any>;
-	submittedBy: string;
+	applicant: string;
 	createdAt?: Date;
 	updatedAt?: Date;
+	status: "pending" | "approved" | "rejected";
+	loanType: "loan" | "gov" | "insurance";
+	loanSubType: string;
 }
 
-const LoanFormSubmissionSchema = new Schema<ILoanFormSubmission>(
+const LoanSchema = new Schema<ILoan>(
 	{
 		templateId: { type: String, required: true },
 		values: { type: Object, required: true },
-		submittedBy: { type: String, required: true },
+		applicant: { type: String, required: true },
+		status: {
+			type: String,
+			enum: ["pending", "approved", "rejected"],
+			default: "pending",
+		},
+		loanType: {
+			type: String,
+			enum: ["loan", "gov", "insurance"],
+			required: true,
+		},
+		loanSubType: { type: String, required: true },
 	},
 	{ timestamps: true }
 );
 
-export const LoanFormSubmission =
-	mongoose.models.LoanFormSubmission ||
-	mongoose.model<ILoanFormSubmission>(
-		"LoanFormSubmission",
-		LoanFormSubmissionSchema
-	);
+export const Loan =
+	mongoose.models.Loan || mongoose.model<ILoan>("Loan", LoanSchema);
 
-const notificationSchema = new Schema(
+export interface INotification extends Document {
+	userId: Record<string, any>;
+	title: string;
+	message: string;
+	read: boolean;
+	createdAt?: Date;
+	updatedAt?: Date;
+}
+
+const notificationSchema = new Schema<INotification>(
 	{
 		userId: {
 			type: mongoose.Schema.Types.ObjectId,
@@ -150,4 +169,4 @@ const notificationSchema = new Schema(
 
 export const Notification =
 	mongoose.models.Notification ||
-	mongoose.model("Notification", notificationSchema);
+	mongoose.model<INotification>("Notification", notificationSchema);
