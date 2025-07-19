@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { authenticate, requireDSA } from '../middleware';
+import { authenticate, requireDSA, requireSuperadmin } from '../middleware';
 import expressAsyncHandler from 'express-async-handler';
-import { createSubmission, getSubmissions } from '../controllers/loanForm.controller';
+import { createLoan, getLoans,updateLoan } from '../controllers/loanForm.controller';
 
 const loanFormRoutes = Router();
 
-// All routes assume /api prefix is handled globally
-loanFormRoutes.post('/', authenticate, requireDSA, expressAsyncHandler(createSubmission));
-loanFormRoutes.get('/', authenticate, requireDSA, expressAsyncHandler(getSubmissions));
+loanFormRoutes.post('/', authenticate, requireDSA, expressAsyncHandler(createLoan));
+loanFormRoutes.get('/', authenticate, requireDSA, expressAsyncHandler(getLoans));
+loanFormRoutes.put('/', authenticate, requireSuperadmin, expressAsyncHandler(updateLoan));
 
-export default loanFormRoutes; 
+export default loanFormRoutes;
