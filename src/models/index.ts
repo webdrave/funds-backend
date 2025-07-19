@@ -111,7 +111,6 @@ export const LoanFormTemplate =
 	mongoose.model<ILoanFormTemplate>("LoanFormTemplate", LoanFormTemplateSchema);
 
 export interface ILoan extends Document {
-	templateId: string;
 	values: Record<string, any>;
 	applicant: string;
 	createdAt?: Date;
@@ -119,11 +118,11 @@ export interface ILoan extends Document {
 	status: "pending" | "approved" | "rejected";
 	loanType: "loan" | "gov" | "insurance";
 	loanSubType: string;
+	rejectionMessage?: string; // Optional field for rejection reason
 }
 
 const LoanSchema = new Schema<ILoan>(
 	{
-		templateId: { type: String, required: true },
 		values: { type: Object, required: true },
 		applicant: { type: String, required: true },
 		status: {
@@ -137,6 +136,7 @@ const LoanSchema = new Schema<ILoan>(
 			required: true,
 		},
 		loanSubType: { type: String, required: true },
+		rejectionMessage: { type: String }, // Add to schema
 	},
 	{ timestamps: true }
 );
