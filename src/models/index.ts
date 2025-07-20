@@ -5,6 +5,9 @@ export interface IAdmin extends Document {
 	email: string;
 	password: string;
 	role: string;
+	plan: mongoose.Types.ObjectId; // reference to Plan
+	planName:string,
+	features: string[]; // features from the plan
 }
 
 const AdminSchema = new Schema<IAdmin>(
@@ -13,6 +16,9 @@ const AdminSchema = new Schema<IAdmin>(
 		email: { type: String, required: true, unique: true },
 		password: { type: String, required: true },
 		role: { type: String, required: true },
+		plan: { type: mongoose.Schema.Types.ObjectId, ref: "Plan", required: true },
+		planName:{type:String,required:true},
+		features: { type: [String], required: true },
 	},
 	{ timestamps: true }
 );
@@ -111,21 +117,20 @@ export const LoanFormTemplate =
 	mongoose.model<ILoanFormTemplate>("LoanFormTemplate", LoanFormTemplateSchema);
 
 export interface ILoan extends Document {
-	templateId: string;
 	values: Record<string, any>;
-	applicant: string;
+	subscriber: string;
 	createdAt?: Date;
 	updatedAt?: Date;
 	status: "pending" | "approved" | "rejected";
 	loanType: "loan" | "gov" | "insurance";
 	loanSubType: string;
+	rejectionMessage?: string; // Optional field for rejection reason
 }
 
 const LoanSchema = new Schema<ILoan>(
 	{
-		templateId: { type: String, required: true },
 		values: { type: Object, required: true },
-		applicant: { type: String, required: true },
+		subscriber: { type: String, required: true },
 		status: {
 			type: String,
 			enum: ["pending", "approved", "rejected"],
@@ -137,6 +142,7 @@ const LoanSchema = new Schema<ILoan>(
 			required: true,
 		},
 		loanSubType: { type: String, required: true },
+		rejectionMessage: { type: String }, // Add to schema
 	},
 	{ timestamps: true }
 );
