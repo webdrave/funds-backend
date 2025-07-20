@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import { Loan } from '../models';
 
 export const createLoan = async (req: Request, res: Response) => {
-  const { values, applicant, loanType,loanSubType } = req.body;
-  const submission = await Loan.create({ values, applicant, loanType,loanSubType });
+  const { values, subscriber, loanType,loanSubType } = req.body;
+  const submission = await Loan.create({ values, subscriber, loanType,loanSubType });
   res.status(201).json(submission);
 };
 

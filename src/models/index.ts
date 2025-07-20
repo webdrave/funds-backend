@@ -5,6 +5,9 @@ export interface IAdmin extends Document {
 	email: string;
 	password: string;
 	role: string;
+	plan: mongoose.Types.ObjectId; // reference to Plan
+	planName:string,
+	features: string[]; // features from the plan
 }
 
 const AdminSchema = new Schema<IAdmin>(
@@ -13,6 +16,9 @@ const AdminSchema = new Schema<IAdmin>(
 		email: { type: String, required: true, unique: true },
 		password: { type: String, required: true },
 		role: { type: String, required: true },
+		plan: { type: mongoose.Schema.Types.ObjectId, ref: "Plan", required: true },
+		planName:{type:String,required:true},
+		features: { type: [String], required: true },
 	},
 	{ timestamps: true }
 );
@@ -112,7 +118,7 @@ export const LoanFormTemplate =
 
 export interface ILoan extends Document {
 	values: Record<string, any>;
-	applicant: string;
+	subscriber: string;
 	createdAt?: Date;
 	updatedAt?: Date;
 	status: "pending" | "approved" | "rejected";
@@ -124,7 +130,7 @@ export interface ILoan extends Document {
 const LoanSchema = new Schema<ILoan>(
 	{
 		values: { type: Object, required: true },
-		applicant: { type: String, required: true },
+		subscriber: { type: String, required: true },
 		status: {
 			type: String,
 			enum: ["pending", "approved", "rejected"],

@@ -8,6 +8,7 @@ import plansRoutes from './routes/plans.routes';
 import loanTemplateRoutes from './routes/loanTemplate.routes';
 import loanFormRoutes from './routes/loanForm.routes';
 import notificationRoutes from './routes/notification.routes';
+import applicationRoutes from './routes/application.routes';
 
 // Load environment variables
 dotenv.config();
@@ -22,6 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
 
 app.use('/api/superadmin', superadminRoutes); // Assuming admin routes are similar to user routes
+app.use('/api/application',applicationRoutes ); // Assuming admin routes are similar to user routes
 app.use('/api/plans' , plansRoutes);
 app.use('/api/loan-templates', loanTemplateRoutes);
 app.use('/api/loan-forms', loanFormRoutes);

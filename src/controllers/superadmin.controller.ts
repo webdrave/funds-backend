@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { Admin, Application } from "../models";
+import { Admin, Application, Plan } from "../models";
 import { RouteError, ValidationErr } from "../common/routeerror";
 import HttpStatusCodes from "../common/httpstatuscode";
 import jwt from "jsonwebtoken";
@@ -16,7 +16,7 @@ const getAdmins = async (req: Request, res: Response, next: NextFunction): Promi
 };
 const createAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { name, email, password, role, type } = req.body;
+    const { name, email, password, role, type, planId } = req.body;
     // Check if user already exists
     const existingUser = await Admin.findOne({ email });
 
@@ -27,8 +27,13 @@ const createAdmin = async (req: Request, res: Response, next: NextFunction): Pro
       );
     }
 
-    if (!name || !email || !password) {
-      throw new ValidationErr("Name, email, and password are required.");
+    if (!name || !email || !password || !planId) {
+      throw new ValidationErr("Name, email, password, and planId are required.");
+    }
+
+    const plan = await Plan.findById(planId);
+    if (!plan) {
+      throw new ValidationErr("Invalid plan.");
     }
 
     const hashedPassword = await bcryptjs.hash(password, 10);
@@ -37,6 +42,9 @@ const createAdmin = async (req: Request, res: Response, next: NextFunction): Pro
       email,
       role,
       password: hashedPassword,
+      plan: plan._id,
+      planName:plan.name,
+      features: plan.features,
     });
     await sendEmail({
       to: user.email,
@@ -46,6 +54,7 @@ const createAdmin = async (req: Request, res: Response, next: NextFunction): Pro
         email: user.email,
         password: password,
         role: user.role,
+        plan:plan.name
       },
     });
 
@@ -111,62 +120,11 @@ const deleteAdmin = async (req: Request, res: Response, next: NextFunction): Pro
     next(error);
   }
 };
-const application = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { name, email, phone, message } = req.body;
-    if (!name || !email || !phone || !message) {
-      throw new ValidationErr("Name, email, phone, and message are required.");
-    }
-    const application = await Application.create({
-      name,
-      email,
-      phone,
-      message,
-    });
-    res.status(HttpStatusCodes.CREATED).json(application);
-  } catch (error) {
-    next(error);
-  }
-};
-const getApplication = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const applications = await Application.find();
-    res.status(HttpStatusCodes.OK).json(applications);
-  } catch (error) {
-    next(error);
-  }
-};
-const updateApplicationStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
 
-    if (!["approved", "rejected", "pending"].includes(status)) {
-      throw new ValidationErr("Invalid status value.");
-    }
-
-    const updated = await Application.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true }
-    );
-
-    res.status(HttpStatusCodes.OK).json(updated);
-  } catch (error) {
-    next(error);
-  }
-};
 
 export {
   getAdmins,
   createAdmin,
   login,
-  deleteAdmin,
-  application,
-  getApplication,
-  updateApplicationStatus
+  deleteAdmin
 };
