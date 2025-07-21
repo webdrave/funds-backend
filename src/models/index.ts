@@ -5,9 +5,10 @@ export interface IAdmin extends Document {
 	email: string;
 	password: string;
 	role: string;
-	plan: mongoose.Types.ObjectId; // reference to Plan
-	planName:string,
+	planId: mongoose.Types.ObjectId; // reference to Plan
+	planName: string,
 	features: string[]; // features from the plan
+	isDeleted: boolean;
 }
 
 const AdminSchema = new Schema<IAdmin>(
@@ -16,9 +17,10 @@ const AdminSchema = new Schema<IAdmin>(
 		email: { type: String, required: true, unique: true },
 		password: { type: String, required: true },
 		role: { type: String, required: true },
-		plan: { type: mongoose.Schema.Types.ObjectId, ref: "Plan", required: true },
-		planName:{type:String,required:true},
+		planId: { type: mongoose.Schema.Types.ObjectId, ref: "Plan", required: true },
+		planName: { type: String, required: true },
 		features: { type: [String], required: true },
+		isDeleted: { type: Boolean, default: false }
 	},
 	{ timestamps: true }
 );

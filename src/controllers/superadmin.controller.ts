@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { Admin, Application, Plan } from "../models";
+import { Admin, Plan } from "../models";
 import { RouteError, ValidationErr } from "../common/routeerror";
 import HttpStatusCodes from "../common/httpstatuscode";
 import jwt from "jsonwebtoken";
@@ -10,6 +10,18 @@ const getAdmins = async (req: Request, res: Response, next: NextFunction): Promi
   try {
     const admins = await Admin.find();
     res.status(HttpStatusCodes.OK).json(admins);
+  } catch (error) {
+    next(error);
+  }
+};
+const getAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      throw new ValidationErr("Admin ID is required.");
+    }
+    const admin = await Admin.findById(id);
+    res.status(HttpStatusCodes.OK).json(admin);
   } catch (error) {
     next(error);
   }
@@ -42,19 +54,18 @@ const createAdmin = async (req: Request, res: Response, next: NextFunction): Pro
       email,
       role,
       password: hashedPassword,
-      plan: plan._id,
-      planName:plan.name,
+      planId: plan._id,
+      planName: plan.name,
       features: plan.features,
     });
     await sendEmail({
       to: user.email,
       type: type,
-      subject: "Welcome to Our Platform",
       additionalData: {
         email: user.email,
         password: password,
         role: user.role,
-        plan:plan.name
+        plan: plan.name
       },
     });
 
@@ -88,10 +99,10 @@ const login = async (req: Request, res: Response, next: NextFunction): Promise<v
     );
 
     // Return user info (excluding password) along with token
-    const { _id, name, email: userEmail, role } = user;
+    const { _id, name, email: userEmail, role, features, planId } = user;
     res.status(HttpStatusCodes.OK).json({
       token,
-      user: { id: _id, name, email: userEmail, role },
+      user: { id: _id, name, email: userEmail, role, features, planId },
     });
   } catch (error) {
     next(error);
@@ -111,7 +122,7 @@ const deleteAdmin = async (req: Request, res: Response, next: NextFunction): Pro
       throw new RouteError(HttpStatusCodes.NOT_FOUND, "Admin not found.");
     }
 
-    await Admin.findByIdAndDelete(id);
+    await Admin.findByIdAndUpdate(id, { isDeleted: true });
 
     res
       .status(HttpStatusCodes.OK)
@@ -120,11 +131,52 @@ const deleteAdmin = async (req: Request, res: Response, next: NextFunction): Pro
     next(error);
   }
 };
+const updateAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { name, email, role, planId, type } = req.body;
+    if (!id) {
+      throw new ValidationErr("Admin ID is required.");
+    }
+    const update: any = {};
+    if (name) update.name = name;
+    if (email) update.email = email;
+    if (role) update.role = role;
+    if (planId) {
+      const plan = await Plan.findById(planId);
+      if (!plan) {
+        throw new ValidationErr("Invalid plan.");
+      }
+      update.planId = plan._id;
+      update.planName = plan.name;
+      update.features = plan.features;
+    }
+    const updatedAdmin = await Admin.findByIdAndUpdate(id, update, { new: true });
+    if (!updatedAdmin) {
+      throw new RouteError(HttpStatusCodes.NOT_FOUND, "Admin not found.");
+    }
+    await sendEmail({
+      to: updatedAdmin.email,
+      type: type,
+      additionalData: {
+        name: updatedAdmin.name,
+        email: updatedAdmin.email,
+        role: updatedAdmin.role,
+        plan: updatedAdmin.planName
+      },
+    });
+    res.status(HttpStatusCodes.OK).json(updatedAdmin);
+  } catch (error) {
+    next(error);
+  }
+};
 
 
 export {
   getAdmins,
+  getAdmin,
   createAdmin,
   login,
-  deleteAdmin
+  deleteAdmin,
+  updateAdmin
 };
