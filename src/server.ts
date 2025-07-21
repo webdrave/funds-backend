@@ -22,8 +22,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
 
-app.use('/api/superadmin', superadminRoutes); // Assuming admin routes are similar to user routes
-app.use('/api/application',applicationRoutes ); // Assuming admin routes are similar to user routes
+app.use('/api/superadmin', superadminRoutes);
+app.use('/api/application',applicationRoutes ); 
 app.use('/api/plans' , plansRoutes);
 app.use('/api/loan-templates', loanTemplateRoutes);
 app.use('/api/loan-forms', loanFormRoutes);

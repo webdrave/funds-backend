@@ -2,7 +2,7 @@ const nodemailer = require("nodemailer");
 import dotenv from "dotenv";
 dotenv.config();
 // Define email template types
-type EmailType = "adminCreation" | "resetPassword" | "notification" | "welcome";
+type EmailType = "adminCreation" | "resetPassword" | "notification" | "welcome" | "adminUpdation";
 
 // Email sending configuration
 interface EmailOptions {
@@ -35,19 +35,31 @@ const generateEmailContent = (
                         <h2>Welcome to the Platform,</h2>
                         <p>Your account has been created by an administrator.</p>
                         <p>Here are your login details:</p>
-                        <p><strong>Email:</strong> ${
-                          additionalData?.email || "N/A"
-                        }</p>
-                        <p><strong>Password:</strong> ${
-                          additionalData?.password || "N/A"
-                        }</p>
-                        <p><strong>Plan:</strong> ${
-                          additionalData?.plan || "N/A"
-                        }</p>
+                        <p><strong>Email:</strong> ${additionalData?.email || "N/A"
+          }</p>
+                        <p><strong>Password:</strong> ${additionalData?.password || "N/A"
+          }</p>
+                        <p><strong>Plan:</strong> ${additionalData?.plan || "N/A"
+          }</p>
                         <p>Please login and change your password immediately.</p>
                         <p>If you have any questions, please contact support.</p>
                     </div>
                 `,
+      };
+    case "adminUpdation":
+      return {
+        subject: "Your Account Has Been Updated",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
+            <h2>Account Update Notification</h2>
+            <p>Your admin account details have been updated by a superadmin.</p>
+            <p><strong>Email:</strong> ${additionalData?.email || "N/A"}</p>
+            <p><strong>Name:</strong> ${additionalData?.name || "N/A"}</p>
+            <p><strong>Role:</strong> ${additionalData?.role || "N/A"}</p>
+            <p><strong>Plan:</strong> ${additionalData?.plan || "N/A"}</p>
+            <p>If you did not request this change or have questions, please contact support.</p>
+          </div>
+        `,
       };
     case "resetPassword":
       return {
@@ -68,10 +80,9 @@ const generateEmailContent = (
         html: `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
                         <h2>Hello,</h2>
-                        <p>${
-                          additionalData?.message ||
-                          "You have a new notification."
-                        }</p>
+                        <p>${additionalData?.message ||
+          "You have a new notification."
+          }</p>
                     </div>
                 `,
       };
@@ -103,7 +114,6 @@ const generateEmailContent = (
 export const sendEmail = async ({
   to,
   type,
-  subject,
   additionalData,
 }: EmailOptions): Promise<boolean> => {
   try {
@@ -112,7 +122,7 @@ export const sendEmail = async ({
     const mailOptions = {
       from: `"${"System"}" <${process.env.EMAIL_USER}>`,
       to,
-      subject: subject || emailContent.subject,
+      subject: emailContent.subject,
       html: emailContent.html,
     };
 
@@ -123,4 +133,4 @@ export const sendEmail = async ({
     console.error("Error sending email:", error);
     return false;
   }
-};
+}
