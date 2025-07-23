@@ -63,14 +63,24 @@ const generateEmailContent = (
       };
     case "resetPassword":
       return {
-        subject: "Password Reset Request",
+        subject: "Password Reset Verification Code",
         html: `
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
-                        <h2>Hello,</h2>
-                        <p>We received a request to reset your password.</p>
-                        <p>Click the link below to reset your password:</p>
-                        <p><a href="${additionalData?.resetLink}" style="background-color: #4CAF50; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px;">Reset Password</a></p>
-                        <p>If you didn't request this, please ignore this email.</p>
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px; background-color: #f9f9f9;">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <h2 style="color: #333;">Password Reset Verification</h2>
+                        </div>
+                        <div style="background-color: white; padding: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <p>Hello ${additionalData?.name || ''},</p>
+                            <p>We received a request to reset your password. To complete the password reset process, please use the verification code below:</p>
+                            <div style="background-color: #f0f7ff; border-left: 4px solid #0066cc; padding: 15px; margin: 20px 0;">
+                                <p style="font-size: 24px; font-weight: bold; margin: 0; letter-spacing: 3px; text-align: center; color: #0066cc;">${additionalData?.resetCode}</p>
+                            </div>
+                            <p><strong>Important:</strong> This code will expire in 15 minutes.</p>
+                            <p>If you did not request a password reset, please ignore this email or contact our support team if you have concerns.</p>
+                        </div>
+                        <div style="margin-top: 20px; text-align: center; font-size: 12px; color: #666;">
+                            <p>This is an automated email. Please do not reply.</p>
+                        </div>
                     </div>
                 `,
       };
