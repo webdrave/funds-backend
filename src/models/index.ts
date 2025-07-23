@@ -9,6 +9,8 @@ export interface IAdmin extends Document {
 	planName: string,
 	features: string[]; // features from the plan
 	isDeleted: boolean;
+	resetPasswordCode?: string;
+	resetPasswordExpires?: Date;
 }
 
 const AdminSchema = new Schema<IAdmin>(
@@ -20,7 +22,9 @@ const AdminSchema = new Schema<IAdmin>(
 		planId: { type: mongoose.Schema.Types.ObjectId, ref: "Plan", required: true },
 		planName: { type: String, required: true },
 		features: { type: [String], required: true },
-		isDeleted: { type: Boolean, default: false }
+		isDeleted: { type: Boolean, default: false },
+		resetPasswordCode: { type: String },
+		resetPasswordExpires: { type: Date }
 	},
 	{ timestamps: true }
 );
