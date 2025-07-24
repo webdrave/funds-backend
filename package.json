@@ -15,8 +15,10 @@
   "license": "ISC",
   "packageManager": "pnpm@10.11.0",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.850.0",
     "@prisma/client": "^6.8.2",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
@@ -25,6 +27,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.17.0",
     "mongoose": "^8.16.3",
+    "multer": "^2.0.2",
     "nodemailer": "^7.0.5",
     "zod": "^4.0.5"
   },
