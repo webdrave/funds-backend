@@ -85,42 +85,84 @@ const PlanSchema = new Schema<IPlan>(
 export const Plan =
 	mongoose.models.Plan || mongoose.model<IPlan>("Plan", PlanSchema);
 
-export interface ILoanFormTemplateField {
-	label: string;
-	type: string;
-	required?: boolean;
-	options?: string[];
+export interface ILoanFormField {
+  label: string;
+  type: "text" | "number" | "select" | "date" | "checkbox" | "textarea" | "document";
+  required?: boolean;
+  options?: string[]; // For select fields
+  fixed?: boolean; // For fields that should not be editable by the admin
+  description?: string; 
+  placeholder?: string; 
+  defaultValue?: string;
+}
+
+export interface ILoanFormPage {
+  title: string;
+  fields: ILoanFormField[];
+  pageNumber: number; 
+  description?: string; 
+  fixed?: boolean; // Indicates if the page is fixed and cannot be deleted
 }
 
 export interface ILoanFormTemplate extends Document {
-	name: string;
-	loanType?: string;
-	fields: ILoanFormTemplateField[];
-	createdBy: string;
-	createdAt?: Date;
-	updatedAt?: Date;
+  name: string; // e.g., "Car Loan"
+  loanType: "private" | "government" | "insurance";
+  icon: string;
+  description: string;
+  pages: ILoanFormPage[];
+  createdBy: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
+const LoanFormFieldSchema = new Schema<ILoanFormField>(
+  {
+    label: { type: String, required: true },
+    type: {
+      type: String,
+      required: true,
+      enum: ["text", "number", "select", "date", "checkbox", "textarea", "document"],
+    },
+    required: { type: Boolean, default: false },
+    options: { type: [String], default: undefined },
+	fixed: { type: Boolean, default: false },
+	description: { type: String }, 
+	placeholder: { type: String }, 
+	defaultValue: { type: String },
+  },
+  { _id: false }
+);
+
+const LoanFormPageSchema = new Schema<ILoanFormPage>(
+  {
+    title: { type: String, required: true },
+    fields: { type: [LoanFormFieldSchema], required: true },
+	pageNumber: { type: Number, required: true },
+	description: { type: String },
+	fixed: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
+
 const LoanFormTemplateSchema = new Schema<ILoanFormTemplate>(
-	{
-		name: { type: String, required: true },
-		loanType: { type: String },
-		fields: [
-			{
-				label: { type: String, required: true },
-				type: { type: String, required: true },
-				required: { type: Boolean, default: false },
-				options: { type: [String], default: undefined },
-			},
-		],
-		createdBy: { type: String, required: true },
-	},
-	{ timestamps: true }
+  {
+    name: { type: String, required: true },
+    loanType: {
+      type: String,
+      required: true,
+      enum: ["private", "government", "insurance"],
+    },
+	icon: { type: String },
+	description: { type: String },
+    pages: { type: [LoanFormPageSchema], required: true },
+    createdBy: { type: String, required: true },
+  },
+  { timestamps: true }
 );
 
 export const LoanFormTemplate =
-	mongoose.models.LoanFormTemplate ||
-	mongoose.model<ILoanFormTemplate>("LoanFormTemplate", LoanFormTemplateSchema);
+  mongoose.models.LoanFormTemplate ||
+  mongoose.model<ILoanFormTemplate>("LoanFormTemplate", LoanFormTemplateSchema);
 
 export interface ILoan extends Document {
 	values: Record<string, any>;
@@ -128,7 +170,7 @@ export interface ILoan extends Document {
 	createdAt?: Date;
 	updatedAt?: Date;
 	status: "pending" | "approved" | "rejected";
-	loanType: "loan" | "gov" | "insurance";
+	loanType: "private" | "government" | "insurance";
 	loanSubType: string;
 	rejectionMessage?: string; // Optional field for rejection reason
 }
@@ -144,7 +186,7 @@ const LoanSchema = new Schema<ILoan>(
 		},
 		loanType: {
 			type: String,
-			enum: ["loan", "gov", "insurance"],
+			enum: ["private", "government", "insurance"],
 			required: true,
 		},
 		loanSubType: { type: String, required: true },
