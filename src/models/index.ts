@@ -203,6 +203,7 @@ export interface INotification extends Document {
 	title: string;
 	message: string;
 	read: boolean;
+	isDeleted?: boolean;
 	createdAt?: Date;
 	updatedAt?: Date;
 }
@@ -217,6 +218,7 @@ const notificationSchema = new Schema<INotification>(
 		title: { type: String, required: true },
 		message: { type: String, required: true },
 		read: { type: Boolean, default: false },
+		isDeleted: { type: Boolean, default: false },
 	},
 	{ timestamps: true }
 );

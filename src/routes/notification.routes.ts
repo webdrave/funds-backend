@@ -14,6 +14,6 @@ const notificationRoutes = Router();
 notificationRoutes.get('/', authenticate, expressAsyncHandler(getNotifications));
 notificationRoutes.post('/', authenticate, expressAsyncHandler(createNotification));
 notificationRoutes.patch('/:id/read', authenticate, expressAsyncHandler(markAsRead));
-notificationRoutes.delete('/:id', authenticate, expressAsyncHandler(deleteNotification));
+notificationRoutes.patch('/:id', authenticate, expressAsyncHandler(deleteNotification));
 
 export default notificationRoutes;
