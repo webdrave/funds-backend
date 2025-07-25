@@ -41,6 +41,8 @@ const generateEmailContent = (
           }</p>
                         <p><strong>Plan:</strong> ${additionalData?.plan || "N/A"
           }</p>
+                        <p><strong>Your Unique Code:</strong> ${additionalData?.dsaCode || "N/A"
+          }</p>
                         <p>Please login and change your password immediately.</p>
                         <p>If you have any questions, please contact support.</p>
                     </div>
