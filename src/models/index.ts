@@ -5,12 +5,16 @@ export interface IAdmin extends Document {
 	email: string;
 	password: string;
 	role: string;
+	phone: string;
+	age: number;
+	dsaCode?: string;
 	planId: mongoose.Types.ObjectId; // reference to Plan
 	planName: string,
 	features: string[]; // features from the plan
 	isDeleted: boolean;
 	resetPasswordCode?: string;
 	resetPasswordExpires?: Date;
+	bankDetails?: mongoose.Types.ObjectId; // reference to Bank
 }
 
 const AdminSchema = new Schema<IAdmin>(
@@ -19,12 +23,16 @@ const AdminSchema = new Schema<IAdmin>(
 		email: { type: String, required: true, unique: true },
 		password: { type: String, required: true },
 		role: { type: String, required: true },
+		phone: { type: String },
+		age: { type: Number },
+		dsaCode: { type: String, unique: true },
 		planId: { type: mongoose.Schema.Types.ObjectId, ref: "Plan", required: true },
 		planName: { type: String, required: true },
 		features: { type: [String], required: true },
 		isDeleted: { type: Boolean, default: false },
 		resetPasswordCode: { type: String },
-		resetPasswordExpires: { type: Date }
+		resetPasswordExpires: { type: Date },
+		bankDetails: { type: mongoose.Schema.Types.ObjectId, ref: "Bank" }
 	},
 	{ timestamps: true }
 );
@@ -226,3 +234,28 @@ const notificationSchema = new Schema<INotification>(
 export const Notification =
 	mongoose.models.Notification ||
 	mongoose.model<INotification>("Notification", notificationSchema);
+
+
+export interface IBank extends Document {
+	accountNumber: string;
+	ifsc: string;
+	bankName: string;
+	accountHolderName: string;
+	branchName?: string;
+	createdAt?: Date;
+	updatedAt?: Date;
+}
+
+const BankSchema = new Schema<IBank>(
+	{
+		accountNumber: { type: String },
+		ifsc: { type: String },
+		bankName: { type: String },
+		accountHolderName: { type: String },
+		branchName: { type: String },
+	},
+	{ timestamps: true }
+);
+
+export const Bank =
+	mongoose.models.Bank || mongoose.model<IBank>("Bank", BankSchema);

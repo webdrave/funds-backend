@@ -63,12 +63,28 @@ const createAdmin = async (
       throw new ValidationErr("Invalid plan.");
     }
 
+    async function generateUniqueCode() {
+			let code;
+			let exists = true;
+
+			while (exists) {
+				code = String(Math.floor(100000 + Math.random() * 900000));
+        exists = !!(await Admin.findOne({ code }));
+			}
+
+			return code;
+		}
+
+    const dsaCode = await generateUniqueCode();
+
+
     const hashedPassword = await bcryptjs.hash(password, 10);
     const user = await Admin.create({
       name,
       email,
       role,
       password: hashedPassword,
+      dsaCode: dsaCode,
       planId: plan._id,
       planName: plan.name,
       features: plan.features,
@@ -81,6 +97,7 @@ const createAdmin = async (
         password: password,
         role: user.role,
         plan: plan.name,
+        dsaCode: user.dsaCode,
       },
     });
 

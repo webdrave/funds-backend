@@ -18,7 +18,8 @@ superadminRoutes.get("/:id", authenticate, requireSuperadmin, expressAsyncHandle
 superadminRoutes.post("/", authenticate, requireSuperadmin, expressAsyncHandler(createAdmin));
 superadminRoutes.patch("/:id", authenticate, requireSuperadmin, expressAsyncHandler(updateAdmin));
 superadminRoutes.post("/login", expressAsyncHandler(login));
-superadminRoutes.delete("/:id", authenticate, requireSuperadmin, expressAsyncHandler(deleteAdmin));
+superadminRoutes.delete("/:id", authenticate, expressAsyncHandler(deleteAdmin));
 superadminRoutes.post("/reset-pass", expressAsyncHandler(requestPasswordReset));
 superadminRoutes.post("/verify-reset", expressAsyncHandler(verifyCodeAndResetPassword));
+
 export default superadminRoutes;
