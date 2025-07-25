@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { Notification } from "../models";
+import { Notification, Admin } from "../models";
 import { sendNotification } from "../utils/notifier";
 
 export const getNotifications = async (req: Request, res: Response) => {
@@ -11,6 +11,13 @@ export const getNotifications = async (req: Request, res: Response) => {
 
 export const createNotification = async (req: Request, res: Response) => {
 	const { title, message, userId } = req.body;
+	const notification = await sendNotification({ title, message, userId });
+	res.status(201).json(notification);
+};
+
+export const notifySuperAdmin = async (req: Request, res: Response) => {
+	const { title, message } = req.body;
+	const userId = await Admin.findOne({ role: "superadmin" }).select("_id");
 	const notification = await sendNotification({ title, message, userId });
 	res.status(201).json(notification);
 };
