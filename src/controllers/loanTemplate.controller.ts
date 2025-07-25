@@ -55,20 +55,6 @@ export const getTemplates = async (_req: Request, res: Response) => {
   }
 };
 
-export const getTemplateByName = async (req: Request, res: Response) => {
-  const { name } = req.params;
-  try {
-    const template = await LoanFormTemplate.findOne({ name });
-    if (!template) {
-       res.status(404).json({ message: 'Template not found' });
-       return
-    }
-     res.status(200).json(template);
-  } catch (err) {
-     res.status(500).json({ message: 'Server error', error: err });
-  }
-};
-
 export const getTemplateById = async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
