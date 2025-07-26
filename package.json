@@ -16,6 +16,7 @@
   "packageManager": "pnpm@10.11.0",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.850.0",
+    "@aws-sdk/s3-request-presigner": "^3.850.0",
     "@prisma/client": "^6.8.2",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.0.0",
