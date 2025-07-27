@@ -114,7 +114,7 @@ export interface ILoanFormPage {
 
 export interface ILoanFormTemplate extends Document {
   name: string; // e.g., "Car Loan"
-  loanType: "private" | "government" | "insurance";
+  loanType: "private" | "government" | "insurance" | "quick" | "taxation";
   icon: string;
   description: string;
   pages: ILoanFormPage[];
@@ -158,7 +158,7 @@ const LoanFormTemplateSchema = new Schema<ILoanFormTemplate>(
     loanType: {
       type: String,
       required: true,
-      enum: ["private", "government", "insurance", "quick"],
+      enum: ["private", "government", "insurance", "quick", "taxation"],
     },
     icon: { type: String },
     description: { type: String },
@@ -194,7 +194,7 @@ export interface ILoan extends Document {
   createdAt?: Date;
   updatedAt?: Date;
   status: "pending" | "approved" | "rejected";
-  loanType: "private" | "government" | "insurance" | "quick";
+  loanType: "private" | "government" | "insurance" | "quick" | "taxation";
   loanSubType: string;
   rejectionMessage?: string; // Optional field for rejection reason
 }
@@ -228,7 +228,7 @@ const LoanSchema = new Schema<ILoan>(
     },
     loanType: {
       type: String,
-      enum: ["private", "government", "insurance", "quick"],
+      enum: ["private", "government", "insurance", "quick", "taxation"],
       required: true,
     },
     loanSubType: { type: String, required: true },
