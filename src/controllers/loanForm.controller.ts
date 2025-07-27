@@ -56,7 +56,7 @@ export const createLoan = async (req: Request, res: Response) => {
 export const getLoans = async (req: Request, res: Response) => {
   try {
     const { loanType } = req.query;
-    const filter = loanType ? { loanType } : { loanType: { $ne: 'quick' } };
+    const filter = loanType ? { loanType } : { loanType: { $nin: ['quick', 'taxation'] } };
     const submissions = await Loan.find(filter);
     res.json(submissions);
   } catch (err) {
