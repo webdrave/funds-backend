@@ -197,6 +197,8 @@ export interface ILoan extends Document {
   updatedAt?: Date;
   status: "pending" | "approved" | "rejected";
   loanType: "private" | "government" | "insurance" | "quick";
+  dsaId?: mongoose.Types.ObjectId;
+  rmId?: mongoose.Types.ObjectId;
   loanSubType: string;
   rejectionMessage?: string;
 }
@@ -233,6 +235,8 @@ const LoanSchema = new Schema<ILoan>(
       enum: ["private", "government", "insurance", "quick"],
       required: true,
     },
+	dsaId: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
+    rmId: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
     loanSubType: { type: String, required: true },
     rejectionMessage: { type: String },
   },

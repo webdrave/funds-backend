@@ -65,6 +65,35 @@ export const getLoans = async (req: Request, res: Response) => {
   }
 };
 
+export const getLoanByRmId = async (req: Request, res: Response) => {
+  try {
+    const { rmId } = req.params;
+    if (!rmId) {
+      res.status(400).json({ message: "RM ID is required" });
+      return;
+    }
+    const loans = await Loan.find({ rmId });
+    res.json(loans);
+  } catch (err) {
+    console.error("Error fetching loans by RM ID:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+export const getLoanByDsaId = async (req: Request, res: Response) => {
+  try {
+    const { dsaId } = req.params;
+    if (!dsaId) {
+      res.status(400).json({ message: "DSA ID is required" });
+      return;
+    }
+    const loans = await Loan.find({ dsaId });
+    res.json(loans);
+  } catch (err) {
+    console.error("Error fetching loans by DSA ID:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export const updateLoan = async (req: Request, res: Response) => {
   try {
     const { _id, status, rejectionMessage } = req.body;
