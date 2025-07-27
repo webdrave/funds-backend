@@ -7,105 +7,6 @@ import bcryptjs from "bcryptjs";
 import { sendEmail } from "../utils/mailer";
 import crypto from "crypto";
 
-const getAdmins = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const admins = await Admin.find();
-    res.status(HttpStatusCodes.OK).json(admins);
-  } catch (error) {
-    next(error);
-  }
-};
-const getAdmin = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { id } = req.params;
-    if (!id) {
-      throw new ValidationErr("Admin ID is required.");
-    }
-    const admin = await Admin.findById(id);
-    res.status(HttpStatusCodes.OK).json(admin);
-  } catch (error) {
-    next(error);
-  }
-};
-const createAdmin = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { name, email, password, role, type, planId } = req.body;
-    // Check if user already exists
-    const existingUser = await Admin.findOne({ email });
-
-    if (existingUser) {
-      throw new RouteError(
-        HttpStatusCodes.CONFLICT,
-        "User with this email already exists."
-      );
-    }
-
-    if (!name || !email || !password || !planId) {
-      throw new ValidationErr(
-        "Name, email, password, and planId are required."
-      );
-    }
-
-    const plan = await Plan.findById(planId);
-    if (!plan) {
-      throw new ValidationErr("Invalid plan.");
-    }
-
-    async function generateUniqueCode() {
-			let code;
-			let exists = true;
-
-			while (exists) {
-				code = String(Math.floor(100000 + Math.random() * 900000));
-        exists = !!(await Admin.findOne({ code }));
-			}
-
-			return code;
-		}
-
-    const dsaCode = await generateUniqueCode();
-
-
-    const hashedPassword = await bcryptjs.hash(password, 10);
-    const user = await Admin.create({
-      name,
-      email,
-      role,
-      password: hashedPassword,
-      dsaCode: dsaCode,
-      planId: plan._id,
-      planName: plan.name,
-      features: plan.features,
-    });
-    await sendEmail({
-      to: user.email,
-      type: type,
-      additionalData: {
-        email: user.email,
-        password: password,
-        role: user.role,
-        plan: plan.name,
-        dsaCode: user.dsaCode,
-      },
-    });
-
-    res.status(HttpStatusCodes.CREATED).json({ user });
-  } catch (error) {
-    next(error);
-  }
-};
 const login = async (
   req: Request,
   res: Response,
@@ -118,7 +19,8 @@ const login = async (
       throw new ValidationErr("Email and password are required.");
     }
 
-    const user = await Admin.findOne({ email });
+    // Find user and populate RM details if it's a DSA
+    let user = await Admin.findOne({ email });
 
     if (!user || !user.password || user.isDeleted) {
       throw new RouteError(HttpStatusCodes.NOT_FOUND, "User not found.");
@@ -127,6 +29,18 @@ const login = async (
     const isPasswordValid = await bcryptjs.compare(password, user.password);
     if (!isPasswordValid) {
       throw new RouteError(HttpStatusCodes.UNAUTHORIZED, "Invalid password.");
+    }
+
+    // If the user is a DSA, get RM details
+    let rmDetails = null;
+    if (user.role === "DSA" && user.rmId) {
+      const rmUser = await Admin.findById(user.rmId).select('name email');
+      if (rmUser) {
+        rmDetails = {
+          name: rmUser.name,
+          email: rmUser.email
+        };
+      }
     }
 
     const token = jwt.sign(
@@ -143,97 +57,36 @@ const login = async (
       features,
       planId,
       planName,
+      rmId
     } = user;
-    res.status(HttpStatusCodes.OK).json({
+    
+    // Create a user object with optional RM details
+    const userData: any = {
+      id: _id,
+      name,
+      email: userEmail,
+      role,
+      features,
+      planId,
+      planName,
+      rmId
+    };
+    
+    // Include RM details if available
+    if (rmDetails) {
+      userData.rm = rmDetails;
+    }
+    
+    const responseData = {
       token,
-      user: {
-        id: _id,
-        name,
-        email: userEmail,
-        role,
-        features,
-        planId,
-        planName,
-      },
-    });
+      user: userData
+    };
+    
+    res.status(HttpStatusCodes.OK).json(responseData);
   } catch (error) {
     next(error);
   }
 };
-
-const deleteAdmin = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { id } = req.params;
-
-    if (!id) {
-      throw new ValidationErr("Admin ID is required.");
-    }
-
-    const admin = await Admin.findById(id);
-
-    if (!admin) {
-      throw new RouteError(HttpStatusCodes.NOT_FOUND, "Admin not found.");
-    }
-
-    await Admin.findByIdAndUpdate(id, { isDeleted: true });
-
-    res
-      .status(HttpStatusCodes.OK)
-      .json({ message: "Admin deleted successfully." });
-  } catch (error) {
-    next(error);
-  }
-};
-const updateAdmin = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { id } = req.params;
-    const { name, email, role, planId, type } = req.body;
-    if (!id) {
-      throw new ValidationErr("Admin ID is required.");
-    }
-    const update: any = {};
-    if (name) update.name = name;
-    if (email) update.email = email;
-    if (role) update.role = role;
-    if (planId) {
-      const plan = await Plan.findById(planId);
-      if (!plan) {
-        throw new ValidationErr("Invalid plan.");
-      }
-      update.planId = plan._id;
-      update.planName = plan.name;
-      update.features = plan.features;
-    }
-    const updatedAdmin = await Admin.findByIdAndUpdate(id, update, {
-      new: true,
-    });
-    if (!updatedAdmin) {
-      throw new RouteError(HttpStatusCodes.NOT_FOUND, "Admin not found.");
-    }
-    await sendEmail({
-      to: updatedAdmin.email,
-      type: type,
-      additionalData: {
-        name: updatedAdmin.name,
-        email: updatedAdmin.email,
-        role: updatedAdmin.role,
-        plan: updatedAdmin.planName,
-      },
-    });
-    res.status(HttpStatusCodes.OK).json(updatedAdmin);
-  } catch (error) {
-    next(error);
-  }
-};
-
 const requestPasswordReset = async (
   req: Request,
   res: Response,
@@ -279,7 +132,6 @@ const requestPasswordReset = async (
     next(error);
   }
 };
-
 const verifyCodeAndResetPassword = async (
   req: Request,
   res: Response,
@@ -324,14 +176,271 @@ const verifyCodeAndResetPassword = async (
     next(error);
   }
 };
+const getAdmins = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    // Use populate to get RM details for DSA users
+    const admins = await Admin.find().populate({
+      path: 'rmId',
+      select: 'name email', // Only include name and email of the RM
+    });
+
+    res.status(HttpStatusCodes.OK).json(admins);
+  } catch (error) {
+    next(error);
+  }
+};
+const getAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      throw new ValidationErr("Admin ID is required.");
+    }
+    
+    // Use populate to get RM details if this admin is a DSA
+    const admin = await Admin.findById(id).populate({
+      path: 'rmId',
+      select: 'name email', // Only include name and email of the RM
+    });
+    
+    res.status(HttpStatusCodes.OK).json(admin);
+  } catch (error) {
+    next(error);
+  }
+};
+const getUsersByRole = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { role } = req.params;
+    
+    // Populate RM details if getting DSA users
+    let query = Admin.find({ role });
+    
+    // If we're fetching DSA users, include their RM information
+    if (role === "DSA") {
+      query = query.populate({
+        path: 'rmId',
+        select: 'name email', // Only include name and email of the RM
+      });
+    }
+    
+    const users = await query;
+    res.status(HttpStatusCodes.OK).json(users);
+  } catch (error) {
+    next(error);
+  }
+};
+const getDsasByRmId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { rmId } = req.params;
+    const dsas = await Admin.find({ rmId });
+    res.status(HttpStatusCodes.OK).json(dsas);
+  } catch (error) {
+    next(error);
+  }
+};
+const createAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { name, email, password, role, type, planId, rmId } = req.body;
+    // Check if user already exists
+    const existingUser = await Admin.findOne({ email });
+    if (existingUser && !existingUser.isDeleted) {
+      throw new RouteError(
+        HttpStatusCodes.CONFLICT,
+        "User with this email already exists."
+      );
+    }
+
+    if (!name || !email || !password || !planId) {
+      throw new ValidationErr(
+        "Name, email, password, and planId are required."
+      );
+    }
+
+    // If role is DSA, rmId is required
+    if (role === "DSA" && !rmId) {
+      throw new ValidationErr("RM ID is required for DSA accounts.");
+    }
+
+    const plan = await Plan.findById(planId);
+    if (!plan) {
+      throw new ValidationErr("Invalid plan.");
+    }
+
+    // If rmId is provided, verify that the RM exists
+    if (rmId) {
+      const rmAdmin = await Admin.findOne({ _id: rmId, role: "RM" });
+      if (!rmAdmin) {
+        throw new ValidationErr("Invalid RM ID or the user is not an RM.");
+      }
+    }
+
+    async function generateUniqueCode() {
+      let code;
+      let exists = true;
+
+      while (exists) {
+        code = String(Math.floor(100000 + Math.random() * 900000));
+        exists = !!(await Admin.findOne({ dsaCode: code }));
+      }
+
+      return code;
+    }
+
+    // Generate DSA code only if the role is DSA
+    let dsaCode;
+    if (role === "DSA") {
+      dsaCode = await generateUniqueCode();
+    }
+
+    const hashedPassword = await bcryptjs.hash(password, 10);
+    
+    // Create user object based on role
+    const userData: any = {
+      name,
+      email,
+      role,
+      password: hashedPassword,
+      planId: plan._id,
+      planName: plan.name,
+      features: plan.features,
+    };
+
+    // Add DSA code and RM ID only if the role is DSA
+    if (role === "DSA") {
+      userData.dsaCode = dsaCode;
+      userData.rmId = rmId;
+    }
+
+    const user = await Admin.create(userData);
+    // Prepare email data based on role
+    const emailData: any = {
+      email: user.email,
+      password: password,
+      role: user.role,
+      plan: plan.name,
+    };
+
+    // Add DSA code to email data if the role is DSA
+    if (user.role === "DSA" && user.dsaCode) {
+      emailData.dsaCode = user.dsaCode;
+    }
+
+    await sendEmail({
+      to: user.email,
+      type: type,
+      additionalData: emailData,
+    });
+
+    res.status(HttpStatusCodes.CREATED).json({ user });
+  } catch (error) {
+    next(error);
+  }
+};
+const updateAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { name, email, role, planId, type, rmId } = req.body;
+    if (!id) {
+      throw new ValidationErr("Admin ID is required.");
+    }
+    const update: any = {};
+    if (name) update.name = name;
+    if (email) update.email = email;
+    if (role) update.role = role;
+    if (rmId) update.rmId = rmId;
+    if (planId) {
+      const plan = await Plan.findById(planId);
+      if (!plan) {
+        throw new ValidationErr("Invalid plan.");
+      }
+      update.planId = plan._id;
+      update.planName = plan.name;
+      update.features = plan.features;
+    }
+    const updatedAdmin = await Admin.findByIdAndUpdate(id, update, {
+      new: true,
+    });
+    if (!updatedAdmin) {
+      throw new RouteError(HttpStatusCodes.NOT_FOUND, "Admin not found.");
+    }
+    await sendEmail({
+      to: updatedAdmin.email,
+      type: type,
+      additionalData: {
+        name: updatedAdmin.name,
+        email: updatedAdmin.email,
+        role: updatedAdmin.role,
+        plan: updatedAdmin.planName,
+      },
+    });
+    res.status(HttpStatusCodes.OK).json(updatedAdmin);
+  } catch (error) {
+    next(error);
+  }
+};
+const deleteAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      throw new ValidationErr("Admin ID is required.");
+    }
+
+    const admin = await Admin.findById(id);
+
+    if (!admin) {
+      throw new RouteError(HttpStatusCodes.NOT_FOUND, "Admin not found.");
+    }
+
+    await Admin.findByIdAndUpdate(id, { isDeleted: true });
+
+    res
+      .status(HttpStatusCodes.OK)
+      .json({ message: "Admin deleted successfully." });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
 
 export {
   getAdmins,
   getAdmin,
   createAdmin,
+  getDsasByRmId,
   login,
   deleteAdmin,
   updateAdmin,
   requestPasswordReset,
+  getUsersByRole,
   verifyCodeAndResetPassword,
 };
