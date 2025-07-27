@@ -31,7 +31,7 @@ app.use('/api/loan-templates', loanTemplateRoutes);
 app.use('/api/loan-forms', loanFormRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/dsa', dsaRoutes);
-app.use('/api/upload', uploadRoutes)
+app.use('/api/upload', uploadRoutes);
 
 // 404 handler for undefined routes
 app.use((req, res, next) => {
