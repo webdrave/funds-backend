@@ -8,6 +8,7 @@ export interface IAdmin extends Document {
 	phone: string;
 	age: number;
 	dsaCode?: string;
+	rmId?: mongoose.Types.ObjectId; // reference to RM Admin (for DSA users)
 	planId: mongoose.Types.ObjectId; // reference to Plan
 	planName: string,
 	features: string[]; // features from the plan
@@ -26,6 +27,7 @@ const AdminSchema = new Schema<IAdmin>(
 		phone: { type: String },
 		age: { type: Number },
 		dsaCode: { type: String, unique: true },
+		rmId: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
 		planId: { type: mongoose.Schema.Types.ObjectId, ref: "Plan", required: true },
 		planName: { type: String, required: true },
 		features: { type: [String], required: true },
@@ -195,8 +197,10 @@ export interface ILoan extends Document {
   updatedAt?: Date;
   status: "pending" | "approved" | "rejected";
   loanType: "private" | "government" | "insurance";
+  dsaId?: mongoose.Types.ObjectId;
+  rmId?: mongoose.Types.ObjectId;
   loanSubType: string;
-  rejectionMessage?: string; // Optional field for rejection reason
+  rejectionMessage?: string;
 }
 
 const LoanFieldValueSchema = new Schema<ILoanFormFieldValue>(

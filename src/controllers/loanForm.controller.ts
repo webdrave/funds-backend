@@ -1,29 +1,39 @@
-import { Request, Response } from 'express';
-import { Loan, LoanFormTemplate } from '../models';
-import { ILoanFormTemplate } from '../models'; // adjust path if needed
+import { Request, Response } from "express";
+import { Loan, LoanFormTemplate } from "../models";
+import { ILoanFormTemplate } from "../models"; // adjust path if needed
 
 export const createLoan = async (req: Request, res: Response) => {
   try {
-    const { formData, subscriber, loanType, loanSubType, templateId } = req.body;
+    const {
+      formData,
+      subscriber,
+      loanType,
+      loanSubType,
+      templateId,
+      dsaId,
+      rmId,
+    } = req.body;
 
     if (!templateId) {
-       res.status(400).json({ message: 'templateId is required' });
-       return
+      res.status(400).json({ message: "templateId is required" });
+      return;
     }
 
-    const template: ILoanFormTemplate | null = await LoanFormTemplate.findById(templateId);
+    const template: ILoanFormTemplate | null = await LoanFormTemplate.findById(
+      templateId
+    );
     if (!template) {
-       res.status(404).json({ message: 'Loan form template not found' });
-       return
+      res.status(404).json({ message: "Loan form template not found" });
+      return;
     }
 
-    const structuredValues = template.pages.map(page => ({
+    const structuredValues = template.pages.map((page) => ({
       pageNumber: page.pageNumber,
       title: page.title,
-      fields: page.fields.map(field => ({
+      fields: page.fields.map((field) => ({
         label: field.label,
         value: formData[field.label] ?? null,
-        isDocument: field.type === 'document',
+        isDocument: field.type === "document",
       })),
     }));
 
@@ -32,12 +42,14 @@ export const createLoan = async (req: Request, res: Response) => {
       subscriber,
       loanType,
       loanSubType,
+      dsaId,
+      rmId,
     });
 
     res.status(201).json(submission);
   } catch (err: any) {
-    console.error('Error creating loan:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error creating loan:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -48,8 +60,8 @@ export const getLoans = async (req: Request, res: Response) => {
     const submissions = await Loan.find(filter);
     res.json(submissions);
   } catch (err) {
-    console.error('Error fetching loans:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching loans:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -58,8 +70,10 @@ export const updateLoan = async (req: Request, res: Response) => {
     const { _id, status, rejectionMessage } = req.body;
 
     if (!_id || !status || !["approved", "rejected"].includes(status)) {
-       res.status(400).json({ message: "Invalid request: id and valid status required." });
-       return
+      res
+        .status(400)
+        .json({ message: "Invalid request: id and valid status required." });
+      return;
     }
 
     const update: any = { status };
@@ -69,16 +83,18 @@ export const updateLoan = async (req: Request, res: Response) => {
       update.rejectionMessage = undefined;
     }
 
-    const updatedLoan = await Loan.findByIdAndUpdate(_id, update, { new: true });
+    const updatedLoan = await Loan.findByIdAndUpdate(_id, update, {
+      new: true,
+    });
 
     if (!updatedLoan) {
-       res.status(404).json({ message: "Loan not found" });
-       return
+      res.status(404).json({ message: "Loan not found" });
+      return;
     }
 
     res.json(updatedLoan);
   } catch (err) {
-    console.error('Error updating loan:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error updating loan:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 };

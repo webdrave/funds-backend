@@ -83,6 +83,14 @@ export const requireSuperadmin = (req: Request, res: Response, next: NextFunctio
   }
   next();
 };
+export const requireRM = (req: Request, res: Response, next: NextFunction) => {
+  const user = (req as any).user;
+  console.log("User role:", user.role);
+  if (!user || user.role !== 'SUPERADMIN'&&user.role !=='RM') {
+    return res.status(403).json({ error: 'Forbidden: Superadmin or RM only' });
+  }
+  next();
+};
 export const requireDSA = (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user;
   if (!user || user.role !== 'SUPERADMIN'&&user.role !=='DSA') {

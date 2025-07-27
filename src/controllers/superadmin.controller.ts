@@ -35,17 +35,42 @@ const getAdmin = async (
     next(error);
   }
 };
+const getUsersByRole = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { role } = req.params;
+    const users = await Admin.find({ role });
+    res.status(HttpStatusCodes.OK).json(users);
+  } catch (error) {
+    next(error);
+  }
+};
+const getDsasByRmId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { rmId } = req.params;
+    const dsas = await Admin.find({ rmId });
+    res.status(HttpStatusCodes.OK).json(dsas);
+  } catch (error) {
+    next(error);
+  }
+};
 const createAdmin = async (
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { name, email, password, role, type, planId } = req.body;
+    const { name, email, password, role, type, planId, rmId } = req.body;
     // Check if user already exists
     const existingUser = await Admin.findOne({ email });
-
-    if (existingUser) {
+    if (existingUser && !existingUser.isDeleted) {
       throw new RouteError(
         HttpStatusCodes.CONFLICT,
         "User with this email already exists."
@@ -58,47 +83,79 @@ const createAdmin = async (
       );
     }
 
+    // If role is DSA, rmId is required
+    if (role === "DSA" && !rmId) {
+      throw new ValidationErr("RM ID is required for DSA accounts.");
+    }
+
     const plan = await Plan.findById(planId);
     if (!plan) {
       throw new ValidationErr("Invalid plan.");
     }
 
+    // If rmId is provided, verify that the RM exists
+    if (rmId) {
+      const rmAdmin = await Admin.findOne({ _id: rmId, role: "RM" });
+      if (!rmAdmin) {
+        throw new ValidationErr("Invalid RM ID or the user is not an RM.");
+      }
+    }
+
     async function generateUniqueCode() {
-			let code;
-			let exists = true;
+      let code;
+      let exists = true;
 
-			while (exists) {
-				code = String(Math.floor(100000 + Math.random() * 900000));
-        exists = !!(await Admin.findOne({ code }));
-			}
+      while (exists) {
+        code = String(Math.floor(100000 + Math.random() * 900000));
+        exists = !!(await Admin.findOne({ dsaCode: code }));
+      }
 
-			return code;
-		}
+      return code;
+    }
 
-    const dsaCode = await generateUniqueCode();
-
+    // Generate DSA code only if the role is DSA
+    let dsaCode;
+    if (role === "DSA") {
+      dsaCode = await generateUniqueCode();
+    }
 
     const hashedPassword = await bcryptjs.hash(password, 10);
-    const user = await Admin.create({
+    
+    // Create user object based on role
+    const userData: any = {
       name,
       email,
       role,
       password: hashedPassword,
-      dsaCode: dsaCode,
       planId: plan._id,
       planName: plan.name,
       features: plan.features,
-    });
+    };
+
+    // Add DSA code and RM ID only if the role is DSA
+    if (role === "DSA") {
+      userData.dsaCode = dsaCode;
+      userData.rmId = rmId;
+    }
+
+    const user = await Admin.create(userData);
+    // Prepare email data based on role
+    const emailData: any = {
+      email: user.email,
+      password: password,
+      role: user.role,
+      plan: plan.name,
+    };
+
+    // Add DSA code to email data if the role is DSA
+    if (user.role === "DSA" && user.dsaCode) {
+      emailData.dsaCode = user.dsaCode;
+    }
+
     await sendEmail({
       to: user.email,
       type: type,
-      additionalData: {
-        email: user.email,
-        password: password,
-        role: user.role,
-        plan: plan.name,
-        dsaCode: user.dsaCode,
-      },
+      additionalData: emailData,
     });
 
     res.status(HttpStatusCodes.CREATED).json({ user });
@@ -143,6 +200,7 @@ const login = async (
       features,
       planId,
       planName,
+      rmId
     } = user;
     res.status(HttpStatusCodes.OK).json({
       token,
@@ -154,6 +212,7 @@ const login = async (
         features,
         planId,
         planName,
+        rmId
       },
     });
   } catch (error) {
@@ -329,9 +388,11 @@ export {
   getAdmins,
   getAdmin,
   createAdmin,
+  getDsasByRmId,
   login,
   deleteAdmin,
   updateAdmin,
   requestPasswordReset,
+  getUsersByRole,
   verifyCodeAndResetPassword,
 };
