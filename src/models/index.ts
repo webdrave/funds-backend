@@ -160,7 +160,7 @@ const LoanFormTemplateSchema = new Schema<ILoanFormTemplate>(
     loanType: {
       type: String,
       required: true,
-      enum: ["private", "government", "insurance"],
+      enum: ["private", "government", "insurance", "quick"],
     },
     icon: { type: String },
     description: { type: String },
@@ -196,9 +196,7 @@ export interface ILoan extends Document {
   createdAt?: Date;
   updatedAt?: Date;
   status: "pending" | "approved" | "rejected";
-  loanType: "private" | "government" | "insurance";
-  dsaId?: mongoose.Types.ObjectId;
-  rmId?: mongoose.Types.ObjectId;
+  loanType: "private" | "government" | "insurance" | "quick";
   loanSubType: string;
   rejectionMessage?: string;
 }
@@ -232,7 +230,7 @@ const LoanSchema = new Schema<ILoan>(
     },
     loanType: {
       type: String,
-      enum: ["private", "government", "insurance"],
+      enum: ["private", "government", "insurance", "quick"],
       required: true,
     },
     loanSubType: { type: String, required: true },

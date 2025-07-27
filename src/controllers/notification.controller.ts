@@ -17,7 +17,12 @@ export const createNotification = async (req: Request, res: Response) => {
 
 export const notifySuperAdmin = async (req: Request, res: Response) => {
 	const { title, message } = req.body;
-	const userId = await Admin.findOne({ role: "superadmin" }).select("_id");
+	const superadmin = await Admin.findOne({ role: "SUPERADMIN" }).select("_id");
+	const userId = superadmin?._id?.toString();
+	if (!userId) {
+		res.status(404).json({ message: "Superadmin not found" });
+		return;
+	}
 	const notification = await sendNotification({ title, message, userId });
 	res.status(201).json(notification);
 };
