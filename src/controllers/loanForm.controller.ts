@@ -55,15 +55,121 @@ export const createLoan = async (req: Request, res: Response) => {
 
 export const getLoans = async (req: Request, res: Response) => {
   try {
-    const { loanType } = req.query;
-    const filter = loanType ? { loanType } : { loanType: { $nin: ['quick', 'taxation'] } };
-    const submissions = await Loan.find(filter);
-    res.json(submissions);
+    const {
+      loanType,
+      status,
+      search = "",
+      page = 1,
+      limit = 10,
+    } = req.query as {
+      loanType?: string;
+      status?: string;
+      search?: string;
+      page?: string | number;
+      limit?: string | number;
+    };
+
+    const filter: any = {};
+
+    // Loan type filtering
+    if (loanType && loanType !== "") {
+      filter.loanType = loanType;
+    } else {
+      filter.loanType = { $nin: ["quick", "taxation"] }; // default exclusion
+    }
+
+    // Status filtering
+    if (status && status !== "all") {
+      filter.status = status;
+    }
+
+    // Search by name or email
+    if (search.trim()) {
+      filter["values.fields"] = {
+        $elemMatch: {
+          label: { $in: ["Name", "Email"] },
+          value: { $regex: new RegExp(search, "i") },
+        },
+      };
+    }
+
+    const pageNum = parseInt(page.toString(), 10);
+    const limitNum = parseInt(limit.toString(), 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    const total = await Loan.countDocuments(filter);
+    const loans = await Loan.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
+
+    res.json({ total, loans, page: pageNum, limit: limitNum });
   } catch (err) {
     console.error("Error fetching loans:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const getLoanPendingCounts = async (req: Request, res: Response) => {
+  try {
+    const getPendingCount = async (filter: any) =>
+      await Loan.countDocuments({ ...filter, status: "pending" });
+
+    const [normal, quick, taxation] = await Promise.all([
+      getPendingCount({ loanType: { $nin: ["quick", "taxation"] } }),
+      getPendingCount({ loanType: "quick" }),
+      getPendingCount({ loanType: "taxation" }),
+    ]);
+
+    res.json({
+      applications: normal,
+      quickApplications: quick,
+      taxApplications: taxation,
+    });
+  } catch (err) {
+    console.error("Error fetching pending counts:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getCategoryName = (loanType: string) => {
+    switch (loanType?.toLowerCase()) {
+      case "private":
+        return "Private Loan";
+      case "government":
+        return "Government Loan";
+      case "insurance":
+        return "Insurance";
+      default:
+        return "Private Loan";
+    }
+  };
+// GET /loan-forms/stats
+export const getLoanStats = async (req: Request, res: Response) => {
+  try {
+    const stats = await Loan.aggregate([
+      {
+        $group: {
+          _id: { loanType: "$loanType", status: "$status" },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+    const formatted: Record<string, any> = {};
+    stats.forEach((s) => {
+      const cat = getCategoryName(s._id.loanType);
+      formatted[cat] ??= { total: 0, approved: 0, pending: 0, rejected: 0 };
+      formatted[cat].total += s.count;
+      formatted[cat][s._id.status] = s.count;
+    });
+    res.json(formatted);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
 
 export const getLoanByRmId = async (req: Request, res: Response) => {
   try {
@@ -79,6 +185,7 @@ export const getLoanByRmId = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 export const getLoanByDsaId = async (req: Request, res: Response) => {
   try {
     const { dsaId } = req.params;

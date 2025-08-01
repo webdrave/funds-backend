@@ -3,11 +3,32 @@ import { Notification, Admin } from "../models";
 import { sendNotification } from "../utils/notifier";
 
 export const getNotifications = async (req: Request, res: Response) => {
-	const { userId } = req.query;
-	const filter = userId ? { userId } : {};
-	const notifications = await Notification.find(filter).sort({ createdAt: -1 });
-	res.json(notifications);
+	try {
+		const { userId, page = "1", limit = "10" } = req.query;
+
+		const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+		const filter = userId ? { userId, isDeleted: { $ne: true } } : { isDeleted: { $ne: true } };
+
+		const [notifications, total] = await Promise.all([
+			Notification.find(filter)
+				.sort({ createdAt: -1 })
+				.skip(skip)
+				.limit(parseInt(limit as string)),
+			Notification.countDocuments(filter),
+		]);
+
+		res.json({
+			notifications,
+			total,
+			page: parseInt(page as string),
+			limit: parseInt(limit as string),
+		});
+	} catch (error) {
+		console.error("Failed to fetch notifications", error);
+		res.status(500).json({ message: "Internal server error" });
+	}
 };
+
 
 export const createNotification = async (req: Request, res: Response) => {
 	const { title, message, userId } = req.body;

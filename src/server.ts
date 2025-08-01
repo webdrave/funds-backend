@@ -11,6 +11,7 @@ import notificationRoutes from './routes/notification.routes';
 import applicationRoutes from './routes/application.routes';
 import dsaRoutes from './routes/dsa.routes';
 import uploadRoutes from './routes/upload.routes'
+import analyticsRoutes from './routes/analytics.routes'
 
 // Load environment variables
 dotenv.config();
@@ -32,7 +33,7 @@ app.use('/api/loan-forms', loanFormRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/dsa', dsaRoutes);
 app.use('/api/upload', uploadRoutes);
-
+app.use('/api/analytics', analyticsRoutes);
 // 404 handler for undefined routes
 app.use((req, res, next) => {
   res.status(404).json({
