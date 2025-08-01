@@ -87,11 +87,14 @@ export const authenticate = async (
     // Fetch user from MongoDB and attach to req.user
     const user = await Admin.findById(decoded.userId);
     if (!user) {
+      console.error('Invalid token user:', decoded.userId);
       return res.status(401).json({ error: "Invalid token user" });
     }
     (req as any).user = user;
+    console.log(`User authenticated: ${user.name} (${user.role})`);
     next();
   } catch (err) {
+    console.error('Authentication error:', err);
     return res.status(401).json({ error: "Invalid token" });
   }
 };
