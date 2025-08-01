@@ -19,6 +19,10 @@ dotenv.config();
 const app: Express = express();
 const port = config.server.port;
 
+app.use("/api/health", async (req, res) => {
+  res.status(200).json({ status: "ok! Server is running" });
+});
+
 // Middleware
 app.use(cors(config.cors));
 app.use(express.json());
