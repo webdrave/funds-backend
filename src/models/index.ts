@@ -299,3 +299,29 @@ const BankSchema = new Schema<IBank>(
 
 export const Bank =
 	mongoose.models.Bank || mongoose.model<IBank>("Bank", BankSchema);
+
+export interface IIssue extends Document {
+	userId: mongoose.Types.ObjectId;
+	title: string;
+	description: string;
+	priority?: "low" | "medium" | "high" | "critical";
+	category?: "bug" | "feature" | "support" | "other";
+	screenshots?: string[];
+	createdAt?: Date;
+	updatedAt?: Date;
+}
+
+const IssueSchema = new Schema<IIssue>(
+  {
+	userId: { type: mongoose.Schema.Types.ObjectId, ref: "Admin", required: true },
+	title: { type: String, required: true },
+	description: { type: String, required: true },
+	priority: { type: String, enum: ["low", "medium", "high", "critical"], default: "medium" },
+	category: { type: String, enum: ["bug", "feature", "support", "other"], default: "other" },
+	screenshots: { type: [String], default: [] },
+  },
+  { timestamps: true }
+);
+
+export const Issue =
+  mongoose.models.Issue || mongoose.model<IIssue>("Issue", IssueSchema);
