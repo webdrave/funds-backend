@@ -9,6 +9,6 @@ import expressAsyncHandler from "express-async-handler";
 const applicationRoutes = Router();
 
 applicationRoutes.post("/", expressAsyncHandler(application));
-applicationRoutes.get("/", authenticate, requireSuperadmin, expressAsyncHandler(getApplication));
+applicationRoutes.get("/", authenticate, expressAsyncHandler(getApplication));
 applicationRoutes.put("/:id", authenticate, requireSuperadmin, expressAsyncHandler(updateApplicationStatus));
 export default applicationRoutes;
