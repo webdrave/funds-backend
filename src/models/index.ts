@@ -325,3 +325,54 @@ const IssueSchema = new Schema<IIssue>(
 
 export const Issue =
   mongoose.models.Issue || mongoose.model<IIssue>("Issue", IssueSchema);
+
+
+export interface ICommission extends Document {
+  loanId: mongoose.Types.ObjectId;
+  dsaId?: mongoose.Types.ObjectId;
+  rmId?: mongoose.Types.ObjectId;
+  amount: number;          // absolute commission amount in currency
+  percentage?: number;     // percentage used to compute commission (optional)
+  status: "pending" | "approved" | "credited" | "rejected";
+  remarks?: string;
+  createdBy?: mongoose.Types.ObjectId; // who created or adjusted it
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const CommissionSchema = new Schema<ICommission>({
+  loanId: { type: Schema.Types.ObjectId, ref: "Loan", required: true },
+  dsaId: { type: Schema.Types.ObjectId, ref: "Admin" },
+  rmId: { type: Schema.Types.ObjectId, ref: "Admin" },
+  amount: { type: Number, required: true },
+  percentage: { type: Number },
+  status: { type: String, enum: ["pending","approved","credited","rejected"], default: "pending" },
+  remarks: { type: String },
+  createdBy: { type: Schema.Types.ObjectId, ref: "Admin" },
+}, { timestamps: true });
+
+export const Commission = mongoose.models.Commission || mongoose.model<ICommission>("Commission", CommissionSchema);
+
+/****************
+ * Withdraw Request Model
+ ****************/
+export interface IWithdrawRequest extends Document {
+  userId: mongoose.Types.ObjectId; // admin (DSA/RM/CRM)
+  amount: number;
+  status: "pending" | "approved" | "rejected" | "processed";
+  requestedAt?: Date;
+  processedAt?: Date;
+  processedBy?: mongoose.Types.ObjectId; // admin who processed it
+  remarks?: string;
+}
+
+const WithdrawRequestSchema = new Schema<IWithdrawRequest>({
+  userId: { type: Schema.Types.ObjectId, ref: "Admin", required: true },
+  amount: { type: Number, required: true },
+  status: { type: String, enum: ["pending","approved","rejected","processed"], default: "pending" },
+  processedAt: { type: Date },
+  processedBy: { type: Schema.Types.ObjectId, ref: "Admin" },
+  remarks: { type: String },
+}, { timestamps: true });
+
+export const WithdrawRequest = mongoose.models.WithdrawRequest || mongoose.model<IWithdrawRequest>("WithdrawRequest", WithdrawRequestSchema);

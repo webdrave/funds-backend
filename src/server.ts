@@ -13,6 +13,8 @@ import dsaRoutes from './routes/dsa.routes';
 import uploadRoutes from './routes/upload.routes'
 import analyticsRoutes from './routes/analytics.routes'
 import issueRoutes from './routes/issue.routes';
+import commissionRoutes from './routes/commission.routes';
+import withdrawalRoutes from './routes/withdrawal.routes';
 
 // Load environment variables
 dotenv.config();
@@ -40,6 +42,9 @@ app.use('/api/dsa', dsaRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/issue', issueRoutes)
+app.use('/api/commissions', commissionRoutes);
+app.use('/api/withdrawals', withdrawalRoutes);
+
 
 // 404 handler for undefined routes
 app.use((req, res, next) => {
