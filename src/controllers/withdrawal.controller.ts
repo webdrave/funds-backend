@@ -5,6 +5,7 @@ import HttpStatusCodes from "../common/httpstatuscode";
 
 export const createWithdrawRequest = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    //@ts-ignore
     const userId = req.user?.userId;
     const { amount, remarks } = req.body;
     if (!userId || !amount || amount <= 0) {
@@ -58,6 +59,7 @@ export const updateWithdrawStatus = async (req: Request, res: Response, next: Ne
     }
 
     // Authorization: RM can act on their subordinates' requests (your logic), superadmin can on all
+    //@ts-ignore
     const user = req.user;
     const isSuper = user?.role === "SUPERADMIN" || user?.role === "RM";
     // add RM checks as needed

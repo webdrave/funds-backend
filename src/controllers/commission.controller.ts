@@ -17,17 +17,15 @@ export const createCommissionForLoan = async (req: Request, res: Response, next:
       res.status(404).json({ message: "Loan not found" });
       return
     }
-
-    // default calculation: use `percentage` if provided, else default 1% (example)
-    const pct = typeof percentage === "number" ? percentage : 1; // adjust default
-    const calculatedAmount = amount ?? Math.round((Number(/*loan value placeholder*/ 0) * pct) / 100);
+    
 
     const commission = await Commission.create({
       loanId,
       dsaId: loan.dsaId,
       rmId: loan.rmId,
-      amount: calculatedAmount,
-      percentage: pct,
+      amount: amount,
+      status: "pending",
+      //@ts-ignore
       createdBy: req.user?.userId, // put your auth user id
     });
 
@@ -74,6 +72,7 @@ export const updateCommission = async (req: Request, res: Response, next: NextFu
        return
     }
     // Example role validation (adapt to your middleware + req.user)
+    //@ts-ignore
     const user = req.user; // make sure your auth middleware attaches user info
     const isSuper = user?.role === "SUPERADMIN";
     const isRM = user?.role === "RM" && existing.rmId?.toString() === user.userId;
