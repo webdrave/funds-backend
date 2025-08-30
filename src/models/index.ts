@@ -16,6 +16,7 @@ export interface IAdmin extends Document {
 	resetPasswordCode?: string;
 	resetPasswordExpires?: Date;
 	bankDetails?: mongoose.Types.ObjectId; // reference to Bank
+	balance:number;
 }
 
 const AdminSchema = new Schema<IAdmin>(
@@ -32,6 +33,7 @@ const AdminSchema = new Schema<IAdmin>(
 		planName: { type: String, required: true },
 		features: { type: [String], required: true },
 		isDeleted: { type: Boolean, default: false },
+		balance: { type: Number, default: 0 },
 		resetPasswordCode: { type: String },
 		resetPasswordExpires: { type: Date },
 		bankDetails: { type: mongoose.Schema.Types.ObjectId, ref: "Bank" }
