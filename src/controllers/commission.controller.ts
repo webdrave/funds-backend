@@ -2,6 +2,7 @@
 import { Request, Response, NextFunction } from "express";
 import { Commission, Loan, Admin } from "../models";
 import HttpStatusCodes from "../common/httpstatuscode";
+import { id } from "zod/v4/locales/index.cjs";
 
 export const createCommissionForLoan = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -28,6 +29,8 @@ export const createCommissionForLoan = async (req: Request, res: Response, next:
       //@ts-ignore
       createdBy: req.user?.userId, // put your auth user id
     });
+
+    await Admin.findByIdAndUpdate(loan.dsaId, { $inc: { balance: commission.amount } });
 
     res.status(HttpStatusCodes.CREATED).json(commission);
   } catch (err) {
@@ -97,3 +100,4 @@ export const updateCommission = async (req: Request, res: Response, next: NextFu
     res.json(updated);
   } catch (err) { next(err); }
 };
+

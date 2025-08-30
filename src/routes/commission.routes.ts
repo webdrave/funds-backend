@@ -15,12 +15,11 @@ const router = Router();
 router.post("/", authenticate, requireRM, expressAsyncHandler(createCommissionForLoan)); // or internal
 router.get("/", authenticate, requireSuperadmin, expressAsyncHandler(listCommissions));
 router.get("/my", authenticate, expressAsyncHandler(async (req: any, res) => {
-  if (!req.user || !req.user.userId) {
+  if (!req.user || !req.user._id) {
      res.status(401).json({ message: "Unauthorized" });
      return
   }
-
-  const commissions = await Commission.find({ dsaId: req.user.userId }).lean();
+  const commissions = await Commission.find({ dsaId: req.user._id }).lean();
   res.json(commissions);
 }));
 

@@ -57,7 +57,8 @@ const login = async (
       features,
       planId,
       planName,
-      rmId
+      rmId,
+      balance
     } = user;
     
     // Create a user object with optional RM details
@@ -69,7 +70,8 @@ const login = async (
       features,
       planId,
       planName,
-      rmId
+      rmId,
+      balance
     };
     
     // Include RM details if available
