@@ -1,18 +1,22 @@
 // src/routes/withdrawal.routes.ts
 import { Router } from "express";
 import expressAsyncHandler from "express-async-handler";
-import { authenticate, requireSuperadmin, requireRM } from "../middleware";
+import { authenticate, requireSuperadmin, requireRM, requireDSA } from "../middleware";
 import {
   createWithdrawRequest,
+  getWithdrawalRequests,
+  getWithdrawalRequestsByRM,
   listWithdrawals,
   updateWithdrawStatus
 } from "../controllers/withdrawal.controller";
+import { get } from "http";
 
 const router = Router();
 
 router.post("/", authenticate, expressAsyncHandler(createWithdrawRequest));
 router.get("/", authenticate, requireSuperadmin, expressAsyncHandler(listWithdrawals)); // admin view
-router.get("/my", authenticate, expressAsyncHandler(listWithdrawals)); // user view: add userId filter in controller
-router.patch("/:id", authenticate, requireSuperadmin, expressAsyncHandler(updateWithdrawStatus));
+router.get("/my", authenticate, requireDSA, expressAsyncHandler(getWithdrawalRequests));
+router.get("/rm", authenticate, requireDSA, expressAsyncHandler(getWithdrawalRequestsByRM));
+router.patch("/:id", authenticate, requireRM, expressAsyncHandler(updateWithdrawStatus));
 
 export default router;

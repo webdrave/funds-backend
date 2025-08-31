@@ -360,6 +360,7 @@ export const Commission = mongoose.models.Commission || mongoose.model<ICommissi
  ****************/
 export interface IWithdrawRequest extends Document {
   userId: mongoose.Types.ObjectId; // admin (DSA/RM/CRM)
+  rmId: mongoose.Types.ObjectId; // RM who is processing the request
   amount: number;
   status: "pending" | "approved" | "rejected" | "processed";
   requestedAt?: Date;
@@ -370,6 +371,7 @@ export interface IWithdrawRequest extends Document {
 
 const WithdrawRequestSchema = new Schema<IWithdrawRequest>({
   userId: { type: Schema.Types.ObjectId, ref: "Admin", required: true },
+  rmId: { type: Schema.Types.ObjectId, ref: "Admin", required: true },
   amount: { type: Number, required: true },
   status: { type: String, enum: ["pending","approved","rejected","processed"], default: "pending" },
   processedAt: { type: Date },
