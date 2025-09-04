@@ -6,6 +6,7 @@ import {
   createWithdrawRequest,
   getWithdrawalRequests,
   getWithdrawalRequestsByRM,
+  getWithdrawalRequestsBySuperadmin,
   listWithdrawals,
   updateWithdrawStatus
 } from "../controllers/withdrawal.controller";
@@ -18,5 +19,6 @@ router.get("/", authenticate, requireSuperadmin, expressAsyncHandler(listWithdra
 router.get("/my", authenticate, requireDSA, expressAsyncHandler(getWithdrawalRequests));
 router.get("/rm", authenticate, requireDSA, expressAsyncHandler(getWithdrawalRequestsByRM));
 router.patch("/:id", authenticate, requireRM, expressAsyncHandler(updateWithdrawStatus));
+router.get("/superadmin", authenticate, requireSuperadmin, expressAsyncHandler(getWithdrawalRequestsBySuperadmin));
 
 export default router;

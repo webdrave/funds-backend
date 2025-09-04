@@ -76,6 +76,40 @@ export const getWithdrawalRequestsByRM = async (
     next(err);
   }
 };
+export const getWithdrawalRequestsBySuperadmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const page = parseInt(req.query?.page as string) || 1; // use 1-based pages
+    const limit = parseInt(req.query?.limit as string) || 10;
+
+    const skip = (page - 1) * limit;
+
+    const [withdrawRequests, total] = await Promise.all([
+      WithdrawRequest.find({})
+        .populate([
+          { path: "userId", select: "name email" },
+          { path: "rmId", select: "name email" },
+        ])
+        .skip(skip)
+        .limit(limit),
+      WithdrawRequest.countDocuments(),
+    ]);
+
+    res.json({
+      data: withdrawRequests,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 
 export const listWithdrawals = async (
   req: Request,
