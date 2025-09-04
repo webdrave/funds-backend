@@ -64,3 +64,17 @@ export const updateDSAProfile = async (
 		next(error);
 	}
 };
+
+export const getBankInfo = async (req: Request, res: Response, next: NextFunction) => {
+	try {
+		const userId = req.params.id;
+		const user = await Admin.findById(userId).populate("bankDetails");
+		if (!user) {
+			res.status(404).json({ message: "User not found" });
+			return;
+		}
+		res.status(200).json(user.bankDetails);
+	} catch (error) {
+		next(error);
+	}
+};
