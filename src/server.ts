@@ -15,6 +15,7 @@ import analyticsRoutes from './routes/analytics.routes'
 import issueRoutes from './routes/issue.routes';
 import commissionRoutes from './routes/commission.routes';
 import withdrawalRoutes from './routes/withdrawal.routes';
+import loanChatRoutes from './routes/loanChat.routes';
 
 // Load environment variables
 dotenv.config();
@@ -44,6 +45,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/issue', issueRoutes)
 app.use('/api/commissions', commissionRoutes);
 app.use('/api/withdrawals', withdrawalRoutes);
+app.use('/api/loan-chats', loanChatRoutes);
 
 
 // 404 handler for undefined routes

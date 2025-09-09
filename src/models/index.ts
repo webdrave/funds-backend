@@ -380,3 +380,38 @@ const WithdrawRequestSchema = new Schema<IWithdrawRequest>({
 }, { timestamps: true });
 
 export const WithdrawRequest = mongoose.models.WithdrawRequest || mongoose.model<IWithdrawRequest>("WithdrawRequest", WithdrawRequestSchema);
+export interface ILoanMessage extends Document {
+  loanId: mongoose.Types.ObjectId;
+  senderId?: mongoose.Types.ObjectId;
+  senderName?: string;
+  senderRole?: string;
+  type: "text" | "photo" | "document";
+  message: string;
+  attachments?: string[];
+  readBy?: mongoose.Types.ObjectId[];
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// inside LoanMessageSchema definition (src/models/index.ts)
+const LoanMessageSchema = new Schema<ILoanMessage>(
+  {
+    loanId: { type: Schema.Types.ObjectId, ref: "Loan", required: true },
+    senderId: { type: Schema.Types.ObjectId, ref: "Admin" },
+    senderName: { type: String },
+    senderRole: { type: String },
+    type: {
+      type: String,
+      enum: ["text", "photo", "document"],
+      default: "text",
+    },
+    message: { type: String, required: true },
+    attachments: { type: [String], default: [] },
+    readBy: { type: [Schema.Types.ObjectId], default: [] },
+  },
+  { timestamps: true }
+);
+
+export const LoanMessage =
+  mongoose.models.LoanMessage ||
+  mongoose.model<ILoanMessage>("LoanMessage", LoanMessageSchema);
