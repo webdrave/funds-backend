@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { LoanMessage, Loan, Admin } from "../models";
+import { count } from "console";
 
 /**
  * POST /api/loan-chats
@@ -40,11 +41,13 @@ export const postMessage = async (req: Request, res: Response, next: NextFunctio
       type,
     };
 
-    if (user && user.userId) {
-      payload.senderId = user.userId;
+    console.log(user );
+
+    if (user && user._id) {
+      payload.senderId = user._id;
       payload.senderRole = user.role || undefined;
 
-      const admin = await Admin.findById(user.userId).select("name");
+      const admin = await Admin.findById(user._id).select("name");
       if (admin) payload.senderName = admin.name;
     } else {
       if (senderName) payload.senderName = senderName;
@@ -96,7 +99,7 @@ export const markLoanMessagesRead = async (req: Request, res: Response, next: Ne
 
     // @ts-ignore
     const user = req.user;
-    const userId = user?.userId || req.body.userId;
+    const userId = user?._id || req.body.userId;
     if (!userId) {res.status(400).json({ message: "userId or auth required" }); return;}
 
     await LoanMessage.updateMany(
