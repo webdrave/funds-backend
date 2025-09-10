@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Loan, LoanFormTemplate } from "../models";
+import { Loan, LoanFormTemplate, LoanMessage } from "../models";
 import { ILoanFormTemplate } from "../models"; // adjust path if needed
 
 export const createLoan = async (req: Request, res: Response) => {
@@ -98,12 +98,27 @@ export const getLoans = async (req: Request, res: Response) => {
     const skip = (pageNum - 1) * limitNum;
 
     const total = await Loan.countDocuments(filter);
-    const loans = await Loan.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limitNum);
 
-    res.json({ total, loans, page: pageNum, limit: limitNum });
+    //@ts-ignore
+    const userId = req.user?._id;
+    const unreadCounts = await LoanMessage.aggregate([
+      { $match: { readBy: { $nin: [userId] } } },
+      { $group: { _id: "$loanId", count: { $sum: 1 } } },
+    ]);
+
+    const unreadMap = unreadCounts.reduce((acc, cur) => {
+      acc[cur._id.toString()] = cur.count;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const loans = await Loan.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum);
+
+    const enrichedLoans = loans.map((loan) => ({
+      ...loan.toObject(),
+      unreadCount: unreadMap[loan._id.toString()] || 0,
+    }));
+
+    res.json({ total, loans:enrichedLoans, page: pageNum, limit: limitNum });
   } catch (err) {
     console.error("Error fetching loans:", err);
     res.status(500).json({ message: "Internal server error" });
@@ -133,17 +148,17 @@ export const getLoanPendingCounts = async (req: Request, res: Response) => {
 };
 
 const getCategoryName = (loanType: string) => {
-    switch (loanType?.toLowerCase()) {
-      case "private":
-        return "Private Loan";
-      case "government":
-        return "Government Loan";
-      case "insurance":
-        return "Insurance";
-      default:
-        return "Private Loan";
-    }
-  };
+  switch (loanType?.toLowerCase()) {
+    case "private":
+      return "Private Loan";
+    case "government":
+      return "Government Loan";
+    case "insurance":
+      return "Insurance";
+    default:
+      return "Private Loan";
+  }
+};
 // GET /loan-forms/stats
 export const getLoanStats = async (req: Request, res: Response) => {
   try {
@@ -178,7 +193,14 @@ export const getLoanByRmId = async (req: Request, res: Response) => {
       res.status(400).json({ message: "RM ID is required" });
       return;
     }
-    const loans = await Loan.find({ rmId });
+    const loans = await Loan.find({ rmId }).lean();
+
+    for (const loan of loans) {
+      //readby is an array of user ids
+      loan.unreadCount = await LoanMessage.countDocuments({
+        loanId: loan._id, readBy: { $nin: [rmId] },
+      });
+    }
     res.json(loans);
   } catch (err) {
     console.error("Error fetching loans by RM ID:", err);
@@ -193,7 +215,11 @@ export const getLoanByDsaId = async (req: Request, res: Response) => {
       res.status(400).json({ message: "DSA ID is required" });
       return;
     }
-    const loans = await Loan.find({ dsaId });
+    const loans = await Loan.find({ dsaId }).lean();
+    for (const loan of loans) {
+      //readby is an array of user ids
+      loan.unreadCount = await LoanMessage.countDocuments({ loanId: loan._id, readBy: { $nin: [dsaId] }, });
+    }
     res.json(loans);
   } catch (err) {
     console.error("Error fetching loans by DSA ID:", err);
